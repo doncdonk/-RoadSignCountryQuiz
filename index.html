@@ -176,7 +176,7 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 <script>
 "use strict";
 /* ================= countries ================= */
-const JA={Albania:"アルバニア",Moldova:"モルドバ",Montenegro:"モンテネグロ",Serbia:"セルビア","Bosnia and Herzegovina":"ボスニア・ヘルツェゴビナ",Andorra:"アンドラ",Belarus:"ベラルーシ",Liechtenstein:"リヒテンシュタイン",Austria:"オーストリア",Belgium:"ベルギー",Bulgaria:"ブルガリア",Croatia:"クロアチア",
+const JA={Albania:"アルバニア",Georgia:"ジョージア",Armenia:"アルメニア",Azerbaijan:"アゼルバイジャン",Malta:"マルタ",Moldova:"モルドバ",Montenegro:"モンテネグロ",Serbia:"セルビア","Bosnia and Herzegovina":"ボスニア・ヘルツェゴビナ",Andorra:"アンドラ",Belarus:"ベラルーシ",Liechtenstein:"リヒテンシュタイン",Austria:"オーストリア",Belgium:"ベルギー",Bulgaria:"ブルガリア",Croatia:"クロアチア",
  Czechia:"チェコ",Denmark:"デンマーク",Estonia:"エストニア",Finland:"フィンランド",France:"フランス",Germany:"ドイツ",
  Greece:"ギリシャ",Hungary:"ハンガリー",Iceland:"アイスランド",Ireland:"アイルランド",Italy:"イタリア",Latvia:"ラトビア",
  Lithuania:"リトアニア",Luxembourg:"ルクセンブルク","North Macedonia":"北マケドニア",Netherlands:"オランダ",Norway:"ノルウェー",
@@ -191,7 +191,7 @@ const GROUPS=[
  ["Czechia","Slovakia","Poland","Hungary","Austria","Slovenia"],
  ["Spain","Portugal","France","Andorra"],["Italy","Switzerland","France","Slovenia","Austria"],
  ["Slovenia","Croatia","Hungary","Austria"],["North Macedonia","Bulgaria","Greece","Albania","Romania"],
- ["Greece","Turkey","Bulgaria","North Macedonia"],["Romania","Bulgaria","Hungary","Ukraine"],
+ ["Greece","Turkey","Bulgaria","North Macedonia"],["Georgia","Armenia","Azerbaijan","Turkey","Russia"],["Malta","Italy"],["Romania","Bulgaria","Hungary","Ukraine"],
  ["Russia","Belarus","Ukraine","Lithuania","Latvia","Estonia","Finland","Poland"]
 ];
 function neighbours(c){const s=new Set();GROUPS.forEach(g=>{if(g.includes(c))g.forEach(x=>s.add(x))});s.delete(c);return s}
@@ -395,6 +395,47 @@ function busNL(){
    ${bus(80,16,40,"#141414","#fff")}<rect x="58" y="50" width="56" height="10" fill="#141414"/><rect x="122" y="48" width="22" height="14" fill="#c8102e"/>${rows}`);
 }
 
+
+/* ---------- letters ---------- */
+function langCard(text,sub){
+  const len=[...text].length, fs=len<=3?84:len<=5?62:len<=7?48:len<=9?38:32;
+  return svg(`<rect x="10" y="40" width="180" height="120" rx="10" fill="#fff" stroke="#9aa0a6" stroke-width="2"/>
+   <text x="100" y="${sub?108:112}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,'Segoe UI','Noto Sans','Noto Sans Georgian','Noto Sans Armenian',Sylfaen,sans-serif" font-size="${fs}" fill="#141414">${esc(text)}</text>
+   ${sub?`<text x="100" y="146" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#666">${esc(sub)}</text>`:""}`);
+}
+/* ---------- number plates ---------- */
+function plate(o){
+  const id="pl"+(UID++), w=o.w||184, x=100-w/2, y=o.y||76, h=o.h||46, bg=o.bg||"#fff", txt=o.text||"#141414";
+  let strip="", right="", deco="";
+  const sx=x+2, sw=20;
+  if(o.strip==="eu"){
+    let st="";for(let i=0;i<12;i++){const a=i/12*Math.PI*2;st+=`<circle cx="${(sx+sw/2+Math.cos(a)*6).toFixed(1)}" cy="${(y+15+Math.sin(a)*6).toFixed(1)}" r="1.1" fill="#FFCC00"/>`}
+    strip=`<rect x="${sx}" y="${y+2}" width="${sw}" height="${h-4}" rx="3" fill="#0A3D9C"/>${st}<rect x="${sx+5}" y="${y+h-14}" width="10" height="7" fill="#fff" opacity=".85" filter="url(#b${id})"/>`;
+  }else if(o.strip==="blue"){
+    strip=`<rect x="${sx}" y="${y+2}" width="${sw}" height="${h-4}" rx="3" fill="#0A3D9C"/><rect x="${sx+5}" y="${y+h-14}" width="10" height="7" fill="#fff" opacity=".85" filter="url(#b${id})"/>`;
+  }else if(o.strip==="ua"){
+    strip=`<rect x="${sx}" y="${y+2}" width="${sw}" height="${h-4}" rx="3" fill="#0A3D9C"/><rect x="${sx+3}" y="${y+7}" width="14" height="5" fill="#0057B7"/><rect x="${sx+3}" y="${y+12}" width="14" height="5" fill="#FFD700"/>
+      <rect x="${sx+5}" y="${y+h-14}" width="10" height="7" fill="#fff" opacity=".85" filter="url(#b${id})"/>`;
+  }else if(o.strip==="no"){
+    strip=`<rect x="${sx}" y="${y+2}" width="${sw}" height="${h-4}" rx="3" fill="#0A3D9C"/>
+      <g transform="translate(${sx+3} ${y+7})"><rect width="14" height="10" fill="#BA0C2F"/><rect x="4" width="3" height="10" fill="#fff"/><rect y="3.5" width="14" height="3" fill="#fff"/><rect x="4.7" width="1.6" height="10" fill="#00205B"/><rect y="4.2" width="14" height="1.6" fill="#00205B"/></g>
+      <rect x="${sx+5}" y="${y+h-14}" width="10" height="7" fill="#fff" opacity=".85" filter="url(#b${id})"/>`;
+  }
+  if(o.right==="blue") right=`<rect x="${x+w-22}" y="${y+2}" width="20" height="${h-4}" rx="3" fill="#0A3D9C"/>`;
+  if(o.right==="yellow") right=`<rect x="${x+w-22}" y="${y+2}" width="20" height="${h-4}" rx="3" fill="#F7C600"/>`;
+  if(o.right==="ru") right=`<rect x="${x+w-46}" y="${y+3}" width="1.8" height="${h-6}" fill="#141414"/>
+      <rect x="${x+w-38}" y="${y+7}" width="26" height="16" rx="2" fill="${txt}" opacity=".8" filter="url(#b${id})"/>
+      <rect x="${x+w-27}" y="${y+h-14}" width="10" height="3" fill="#fff" stroke="#999" stroke-width=".4"/><rect x="${x+w-27}" y="${y+h-11}" width="10" height="3" fill="#0039A6"/><rect x="${x+w-27}" y="${y+h-8}" width="10" height="3" fill="#D52B1E"/>`;
+  if(o.bandsAT) deco+=`<rect x="${x+2}" y="${y+2}" width="${w-4}" height="5" fill="#C8102E"/><rect x="${x+2}" y="${y+h-7}" width="${w-4}" height="5" fill="#C8102E"/>`;
+  if(o.county) deco+=`<rect x="${x+60}" y="${y+5}" width="${w-90}" height="5" rx="2" fill="${txt}" opacity=".7" filter="url(#b${id})"/>`;
+  const tx0=x+(o.strip?30:12), tx1=x+w-(o.right==="ru"?52:o.right?28:12), ty=y+(o.county?15:11), th=h-(o.county?24:22);
+  const chars=`<rect x="${tx0}" y="${ty}" width="${tx1-tx0}" height="${th}" rx="5" fill="${txt}" opacity=".78" filter="url(#b${id})"/>`;
+  const border=o.border?`<rect x="${x+1.5}" y="${y+1.5}" width="${w-3}" height="${h-3}" rx="4" fill="none" stroke="${o.border}" stroke-width="3"/>`:"";
+  return `<defs><filter id="b${id}" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="${o.blur||3.2}"/></filter></defs>
+   <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="${bg}" stroke="#444" stroke-width="1.5"/>${deco}${strip}${right}${chars}${border}`;
+}
+const plateSvg=(...ps)=>svg(`<rect x="0" y="0" width="200" height="200" fill="none"/>${ps.map(plate).join("")}`);
+
 /* ================= sign data ================= */
 // Countries using the most common (white, thick red border) design in each type
 const WHITE_COMMON=["Germany","France","Italy","Spain","Portugal","Netherlands","Belgium","Luxembourg","Austria","Switzerland",
@@ -474,6 +515,55 @@ const TYPES=[
     tip:"緑地に白文字です。フランスの主要道路とポーランドの一般道です。"},
    {id:"b",draw:()=>panel(C.blue,"#fff",{route:{bg:"#fff",fg:C.blue}}),countries:["Italy","Switzerland","Czechia","Netherlands","Finland","Sweden"],
     tip:"青地に白文字です。イタリア、スイス、チェコ、オランダ、フィンランド、スウェーデンなど。"}]},
+ {id:"letters",cat:"言語・文字",ja:"特徴的な文字",en:"Distinctive letters",multi:["Belgium","Luxembourg","Switzerland","Spain","Belarus","Montenegro","Serbia"],groups:[
+   {id:"hu",draw:()=>langCard("ő ű"),countries:["Hungary"],tip:"二重アキュート（ő ű）はハンガリー語だけ。"},
+   {id:"pl",draw:()=>langCard("ł ż ę ą"),countries:["Poland"],tip:"ł（横棒付きのL）と ż ę ą はポーランド語。ł が決め手。"},
+   {id:"ro",draw:()=>langCard("ș ț ă"),countries:["Romania","Moldova"],tip:"下にコンマが付く ș ț と ă はルーマニア語（モルドバも）。"},
+   {id:"is",draw:()=>langCard("ð þ æ"),countries:["Iceland"],tip:"þ（ソーン）があればアイスランド。ð はフェロー語にもある。"},
+   {id:"cz",draw:()=>langCard("ř ů ě"),countries:["Czechia"],tip:"ř と ů はチェコ語だけ。"},
+   {id:"sk",draw:()=>langCard("ľ ô ä ŕ"),countries:["Slovakia"],tip:"ľ ô ŕ はスロバキア語。チェコ語の ř ů は使わない。"},
+   {id:"lt",draw:()=>langCard("ė į ų"),countries:["Lithuania"],tip:"ė と、下にしっぽが付く į ų はリトアニア語。"},
+   {id:"lv",draw:()=>langCard("ģ ķ ļ ņ"),countries:["Latvia"],tip:"下にコンマが付く ģ ķ ļ ņ と長音符 ā ē ī ū はラトビア語。"},
+   {id:"ee",draw:()=>langCard("õ ä ö ü"),countries:["Estonia"],tip:"õ と ä ö ü が一緒に出るのはエストニア語。"},
+   {id:"tr",draw:()=>langCard("ı ğ ş"),countries:["Turkey","Azerbaijan"],tip:"点のない ı と ğ はトルコ語（アゼルバイジャン語にもある）。"},
+   {id:"az",draw:()=>langCard("ə"),countries:["Azerbaijan"],tip:"ə（シュワー）はアゼルバイジャン語。"},
+   {id:"hr",draw:()=>langCard("đ č ć"),countries:["Croatia","Bosnia and Herzegovina","Montenegro","Serbia"],tip:"đ と ć は旧ユーゴ圏のラテン文字。スロベニア語には無い。"},
+   {id:"al",draw:()=>langCard("ë xh gj"),countries:["Albania"],tip:"ë が頻出し、xh gj などの綴りがあればアルバニア語（コソボも）。"},
+   {id:"de",draw:()=>langCard("ß ä ö ü"),countries:["Germany","Austria"],tip:"ß はドイツとオーストリア。スイスのドイツ語は ß を使わず ss と書く。"},
+   {id:"es",draw:()=>langCard("ñ"),countries:["Spain"],tip:"ñ はスペイン語。"},
+   {id:"ad",draw:()=>langCard("l·l ç"),countries:["Andorra","Spain"],tip:"中黒入りの l·l はカタルーニャ語。アンドラ（スペインのカタルーニャも）。"},
+   {id:"pt",draw:()=>langCard("ã õ ç"),countries:["Portugal"],tip:"ã と õ（チルダ付き母音）はポルトガル語。"},
+   {id:"fr",draw:()=>langCard("œ ê è ç"),countries:["France","Belgium","Luxembourg","Switzerland"],tip:"œ ê はフランス語。ベルギー、ルクセンブルク、スイスの一部もフランス語圏。"},
+   {id:"nl",draw:()=>langCard("ij aa"),countries:["Netherlands","Belgium"],tip:"ij の綴りと二重母音（aa oo ee）はオランダ語。ベルギー北部も。"},
+   {id:"dkno",draw:()=>langCard("æ ø å"),countries:["Denmark","Norway"],tip:"ø と æ はデンマーク語とノルウェー語。スウェーデン語は ä ö を使う。"},
+   {id:"se",draw:()=>langCard("å ä ö"),countries:["Sweden"],tip:"å と ä ö の組み合わせはスウェーデン語。"},
+   {id:"fi",draw:()=>langCard("ää yy kk"),countries:["Finland"],tip:"ä や y、子音が二重に続く綴りはフィンランド語。å はほぼ使わない（スウェーデン語併記を除く）。"},
+   {id:"gr",draw:()=>langCard("Ω Σ λ"),countries:["Greece"],tip:"ギリシャ文字。キプロスでも使われる。"},
+   {id:"ua",draw:()=>langCard("і ї є ґ"),countries:["Ukraine"],tip:"ї є ґ はウクライナ語だけ。ロシア語の ы э は無い。"},
+   {id:"by",draw:()=>langCard("ў і"),countries:["Belarus"],tip:"ў（短いウ）はベラルーシ語だけ。"},
+   {id:"ru",draw:()=>langCard("ы э ё"),countries:["Russia","Belarus"],tip:"ы э はロシア語（ベラルーシ語にもある）。ウクライナ語・ブルガリア語には無い。"},
+   {id:"bg",draw:()=>langCard("път ъгъл","ъ が母音として頻出"),countries:["Bulgaria"],tip:"ъ が単語の中で母音として頻繁に出て、ы э が無ければブルガリア語。"},
+   {id:"rs",draw:()=>langCard("ђ ћ џ"),countries:["Serbia","Montenegro"],tip:"ђ ћ はセルビア語キリル文字。"},
+   {id:"mk",draw:()=>langCard("ѓ ќ ѕ"),countries:["North Macedonia"],tip:"ѓ ќ ѕ はマケドニア語だけ。"},
+   {id:"ka",draw:()=>langCard("ქართული"),countries:["Georgia"],tip:"丸みを帯びた独自の文字はジョージア文字。"},
+   {id:"hy",draw:()=>langCard("Հայերեն"),countries:["Armenia"],tip:"アルメニア文字。ジョージア文字より縦の線が多く角ばる。"},
+   {id:"mt",draw:()=>langCard("ħ ġ ż"),countries:["Malta"],tip:"ħ（横棒付きのh）と ġ はマルタ語。"}]},
+ {id:"plates",cat:"ナンバープレート",ja:"ナンバープレート（前）",en:"License plate",groups:[
+   {id:"eu",draw:()=>plateSvg({strip:"eu"}),countries:["Germany","Spain","Poland","Czechia","Slovakia","Hungary","Greece","Sweden","Finland","Slovenia","Croatia","Romania","Bulgaria","Estonia","Latvia","Lithuania"],
+    tip:"白地に左のEUの青帯だけ。EU加盟国の標準形で、これだけでは絞れない。"},
+   {id:"nllu",draw:()=>plateSvg({strip:"eu",bg:"#F7C600"}),countries:["Netherlands","Luxembourg"],tip:"前後とも黄色地にEUの帯。オランダとルクセンブルク。"},
+   {id:"be",draw:()=>plateSvg({strip:"eu",text:"#B3102A"}),countries:["Belgium"],tip:"白地に赤い文字。ベルギー。ぼかし越しでも赤みで分かる。"},
+   {id:"frit",draw:()=>plateSvg({strip:"eu",right:"blue"}),countries:["France","Italy"],tip:"左右両端に青い帯。フランス（右は地域番号）とイタリア（右は登録年）。プレートだけでは両国を区別しにくいので、ボラードや標識と組み合わせる。"},
+   {id:"pt",draw:()=>plateSvg({strip:"eu",right:"yellow"}),countries:["Portugal"],tip:"右端に黄色い帯（登録年月）。ポルトガル。"},
+   {id:"at",draw:()=>plateSvg({strip:"eu",bandsAT:1}),countries:["Austria"],tip:"上下の縁が赤い帯（赤白赤）。オーストリア。"},
+   {id:"dk",draw:()=>plateSvg({strip:"eu",border:"#C8102E"}),countries:["Denmark"],tip:"白地に赤い枠。デンマーク。"},
+   {id:"ie",draw:()=>plateSvg({strip:"eu",county:1}),countries:["Ireland"],tip:"番号の上に小さく県名（アイルランド語）が入る。アイルランド。"},
+   {id:"uk",draw:()=>plateSvg({y:46,h:42},{y:112,h:42,bg:"#F7C600"}),countries:["United Kingdom"],tip:"前が白、後ろが黄色で、EUの帯なし。イギリス。"},
+   {id:"ch",draw:()=>plateSvg({w:136}),countries:["Switzerland","Liechtenstein"],tip:"EUの帯がなく、前のプレートが短め。スイス（リヒテンシュタインも帯なし）。"},
+   {id:"ru",draw:()=>plateSvg({right:"ru"}),countries:["Russia"],tip:"左に帯がなく、右端に地域番号の枠と小さなロシア国旗。"},
+   {id:"ua",draw:()=>plateSvg({strip:"ua"}),countries:["Ukraine"],tip:"左の青帯に青と黄の国旗（UA）。ウクライナ。"},
+   {id:"no",draw:()=>plateSvg({strip:"no"}),countries:["Norway"],tip:"左の青帯にノルウェー国旗（EUの星なし）。"},
+   {id:"tr",draw:()=>plateSvg({strip:"blue"}),countries:["Turkey"],tip:"左の青帯に星がなく、TR の文字だけ。トルコ。"}]},
  {id:"busstop",cat:"案内標識",ja:"バス停",en:"Bus stop",multi:["Netherlands"],groups:[
    {id:"std",draw:()=>busStandard(5),
     countries:["Italy","Spain","Portugal","Poland","Czechia","Slovakia","Hungary","Slovenia","Serbia","Bosnia and Herzegovina","North Macedonia","Bulgaria","Romania","Moldova","Greece","Latvia","Luxembourg","Netherlands"],
