@@ -230,8 +230,8 @@ GROUPS.push(["Washington","Oregon","Idaho","California","Nevada"],["Montana","Wy
  ["Virginia","West Virginia","Maryland","North Carolina","Delaware"],["South Carolina","North Carolina","Georgia (US)","Florida"],["New York","New Jersey","Pennsylvania","Connecticut","Vermont"],
  ["Maine","New Hampshire","Vermont","Massachusetts","Rhode Island","Connecticut"],["Delaware","Maryland","New Jersey","Pennsylvania"],["Alaska","Washington","Hawaii"],["Hawaii","California","Alaska"]);
 const JPREF={};
-const LV={1:["初級","#2f9e5c"],2:["中級","#d08a12"],3:["上級","#c4161c"]};
-const lvBadge=t=>t.level?`<span class="lv" style="background:${LV[t.level][1]}">${"★".repeat(t.level)}${"☆".repeat(3-t.level)} ${LV[t.level][0]}</span>`:"";
+const LV={1:["初級","#2f9e5c"],2:["中級","#d08a12"],3:["上級","#c4161c"],4:["超上級","#7b2cbf"]};
+const lvBadge=t=>t.level?`<span class="lv" style="background:${LV[t.level][1]}">${"★".repeat(t.level)}${"☆".repeat(Math.max(0,3-t.level))} ${LV[t.level][0]}</span>`:"";
 const dispName=c=>JP[c]?JP[c][0]:c.replace(" (US)","");
 const dispSub=c=>JP[c]?JP[c][1]:(JA[c]||"");
 function neighbours(c){const s=new Set();GROUPS.forEach(g=>{if(g.includes(c))g.forEach(x=>s.add(x))});s.delete(c);return s}
@@ -706,6 +706,68 @@ function citySign(kanji,roma){
 const cityGroups=(list,lv)=>list.map(([k,r,c,note])=>({id:"c"+lv+"_"+r,draw:()=>citySign(k,r),countries:["pf"+c],
   tip:`${k}は${PREF_FULL[c]}（${PREF_REGION(c)}）。`+(CAPITAL[c]===k?(note?`県庁所在地で${note}。`:"県庁所在地。"):(note?`${note}。`:"")+`県庁所在地は${CAPITAL[c]}。`)}));
 
+
+// level 4: confusing names, same-name cities and lesser-known cities. [kanji, romaji, pref codes, lure pref codes, note]
+const CITY4=[
+ ["北広島","Kitahiroshima","01","34","名前に「広島」が入るが北海道の市。"],
+ ["安芸","Aki","39","34","安芸は広島の旧国名だが、安芸市は高知県。（広島県にあるのは安芸高田市）"],
+ ["安芸高田","Akitakata","34","39","こちらは広島県。高知県の安芸市と区別する。"],
+ ["府中","Fuchu","13 34","","府中市は東京都と広島県の両方にある。"],
+ ["伊達","Date","01 07","","伊達市は北海道と福島県の両方にある。"],
+ ["富士吉田","Fujiyoshida","19","22","富士山の北側で、静岡県ではなく山梨県。"],
+ ["鹿嶋","Kashima","08","41","「鹿嶋」（山が付く）は茨城県。佐賀県は「鹿島」。"],
+ ["鹿島","Kashima","41","08","「鹿島」は佐賀県。茨城県は「鹿嶋」。"],
+ ["小松島","Komatsushima","36","17","徳島県。石川県の小松市と混同しやすい。"],
+ ["大和高田","Yamatotakada","29","14","奈良県。神奈川県の大和市と混同しやすい。"],
+ ["大野城","Onojo","40","18","福岡県。福井県の大野市と混同しやすい。"],
+ ["大野","Ono","18","40","福井県の大野市。福岡県は大野城市。"],
+ ["館林","Tatebayashi","10","05","群馬県。秋田県の大館市と混同しやすい。"],
+ ["大館","Odate","05","10","秋田県。群馬県の館林市と混同しやすい。"],
+ ["白石","Shiroishi","04","41","宮城県の白石市（佐賀県の白石町は町）。"],
+ ["白河","Shirakawa","07","",""],
+ ["那須塩原","Nasushiobara","09","",""],
+ ["常陸太田","Hitachiota","08","",""],
+ ["上野原","Uenohara","19","13","東京都に接するが山梨県。"],
+ ["北杜","Hokuto","19","20",""],
+ ["南アルプス","Minami-Alps","19","20",""],
+ ["四国中央","Shikokuchuo","38","37","「四国中央」は愛媛県（香川・徳島との境）。"],
+ ["南国","Nankoku","39","",""],
+ ["日向","Hyuga","45","",""],
+ ["薩摩川内","Satsumasendai","46","",""],
+ ["豊後高田","Bungotakada","44","",""],
+ ["筑後","Chikugo","40","41",""],
+ ["伊賀","Iga","24","25","伊賀は三重県（滋賀県の甲賀市と混同しやすい）。"],
+ ["越前","Echizen","18","",""],
+ ["飛騨","Hida","21","16",""],
+ ["糸魚川","Itoigawa","15","16","新潟県の西端。富山県と接する。"],
+ ["魚津","Uozu","16","15",""],
+ ["珠洲","Suzu","17","",""],
+ ["名寄","Nayoro","01","",""],
+ ["遠野","Tono","03","",""],
+ ["男鹿","Oga","05","",""],
+ ["新庄","Shinjo","06","",""],
+ ["結城","Yuki","08","09",""],
+ ["秦野","Hadano","14","",""],
+ ["多治見","Tajimi","21","23","岐阜県。名古屋のベッドタウンだが愛知県ではない。"],
+ ["犬山","Inuyama","23","21","愛知県。岐阜県との境。"],
+ ["米原","Maibara","25","21",""],
+ ["豊岡","Toyooka","28","26",""],
+ ["福知山","Fukuchiyama","26","28",""],
+ ["新見","Niimi","33","34",""],
+ ["三次","Miyoshi","34","33",""],
+ ["江津","Gotsu","32","31",""],
+ ["境港","Sakaiminato","31","32","鳥取県。島根県の松江のすぐ隣。"],
+ ["周南","Shunan","35","",""],
+ ["坂出","Sakaide","37","",""],
+ ["宇佐","Usa","44","",""],
+ ["人吉","Hitoyoshi","43","46",""],
+ ["五島","Goto","42","",""],
+ ["奄美","Amami","46","47","奄美大島は鹿児島県（沖縄県ではない）。"],
+ ["宮古島","Miyakojima","47","",""]];
+const cityGroups4=list=>list.map(([k,r,codes,lure,note])=>{const cs=codes.split(" ");return {id:"c4_"+r+"_"+cs[0],draw:()=>citySign(k,r),countries:cs.map(c=>"pf"+c),
+  lure:lure?lure.split(" ").map(c=>"pf"+c):[],
+  tip:(note||`${k}は${cs.map(c=>PREF_FULL[c]).join("と")}（${PREF_REGION(cs[0])}）。`)+(cs.length===1?`県庁所在地は${CAPITAL[cs[0]]}。`:"")}});
+
 /* ================= sign data ================= */
 // Countries using the most common (white, thick red border) design in each type
 const WHITE_COMMON=["Germany","France","Italy","Spain","Portugal","Netherlands","Belgium","Luxembourg","Austria","Switzerland",
@@ -896,6 +958,7 @@ const TYPES=[
  {id:"jpcity1",area:"jp",city:1,level:1,cat:"日本・都市",ja:"都市→都道府県①：県庁所在地・政令指定都市",en:"Capitals & designated cities",groups:cityGroups(CITY1,1)},
  {id:"jpcity2",area:"jp",city:1,level:2,cat:"日本・都市",ja:"都市→都道府県②：主要都市",en:"Major cities",groups:cityGroups(CITY2,2)},
  {id:"jpcity3",area:"jp",city:1,level:3,cat:"日本・都市",ja:"都市→都道府県③：観光地・中小の市",en:"Tourist & smaller cities",groups:cityGroups(CITY3,3)},
+ {id:"jpcity4",area:"jp",city:1,level:4,cat:"日本・都市",ja:"都市→都道府県④：紛らわしい市・マイナーな市",en:"Tricky & lesser-known cities",groups:cityGroups4(CITY4)},
  {id:"letters",cat:"言語・文字",ja:"特徴的な文字",en:"Distinctive letters",multi:["Belgium","Luxembourg","Switzerland","Spain","Belarus","Montenegro","Serbia"],groups:[
    {id:"hu",draw:()=>langCard("ő ű"),countries:["Hungary"],tip:"二重アキュート（ő ű）はハンガリー語だけ。"},
    {id:"pl",draw:()=>langCard("ł ż ę ą"),countries:["Poland"],tip:"ł（横棒付きのL）と ż ę ą はポーランド語。ł が決め手。"},
@@ -1122,12 +1185,13 @@ function makeDeck(list){
 function startQuiz(deck){Q={deck,i:0,score:0,streak:0,miss:[],answered:false};$("#hTot").textContent=deck.length;show("sQuiz");renderQ()}
 function buildOptions(t,g,country){
   const multi=new Set(t.multi||[]);
-  let cands=t.groups.filter(x=>x!==g).flatMap(x=>x.countries).filter(c=>!multi.has(c)&&!g.countries.includes(c));
+  let cands=(t.city?Object.keys(PREFN).map(c=>"pf"+c):t.groups.filter(x=>x!==g).flatMap(x=>x.countries)).filter(c=>!multi.has(c)&&!g.countries.includes(c));
   cands=shuffle([...new Set(cands)]);
   if(S.mode==="near"){const nb=neighbours(country);cands.sort((a,b)=>(nb.has(b)?1:0)-(nb.has(a)?1:0))}
+  if(g.lure&&g.lure.length){const L=g.lure.filter(c=>cands.includes(c));cands=[...L,...cands.filter(c=>!L.includes(c))]}
   // spread distractors across different designs where possible
   const picks=[],used=new Set();
-  for(const c of cands){const gid=groupOf(t,c).id;if(!used.has(gid)||t.groups.length-1<3){picks.push(c);used.add(gid)}if(picks.length===3)break}
+  for(const c of cands){const gg=groupOf(t,c);const gid=gg?gg.id:c;if(!used.has(gid)||t.groups.length-1<3){picks.push(c);used.add(gid)}if(picks.length===3)break}
   for(const c of cands){if(picks.length===3)break;if(!picks.includes(c))picks.push(c)}
   return shuffle([country,...picks]);
 }
@@ -1161,7 +1225,7 @@ function answer(c){
   $("#share").textContent=(others.length?`同じデザインの国: ${others.map(x=>JA[x]||x).join("、")}`:(t.area==="jp"?"":"このデザインはこの国だけです。"))+multiNote;
   $("#compare").innerHTML=Q.opts.map(oc=>{const og=groupOf(t,oc);
     const cls=(oc===q.country?" is-right":"")+(oc===c&&!ok?" is-picked":"");
-    const dg=oc===q.country?g:og;
+    const dg=oc===q.country?g:(og||{draw:()=>citySign(dispName(oc).replace(/[都道府県]$/,""),"")});
     return `<div class="cmp${cls}"><div class="img">${dg.draw()}</div><div class="nm">${esc(dispName(oc))}<small>${esc(dispSub(oc))}</small></div></div>`}).join("");
   const roles={};
   Q.opts.forEach(o=>roles[o]="opt");
