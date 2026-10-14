@@ -44,6 +44,7 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 .seg{display:flex;border:1px solid var(--asphalt-3);border-radius:8px;overflow:hidden}
 .seg button{flex:1;border:0;background:var(--asphalt-2);padding:8px 6px;cursor:pointer;font-size:13px}
 .seg button[aria-pressed="true"]{background:var(--blue);font-weight:700}
+.modeseg{margin-top:20px;max-width:520px}.modeseg button{padding:12px 8px;font-size:15px}
 .opt-label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 .go{background:var(--yellow);color:#1d1f21;border:0;border-radius:8px;padding:12px 26px;font-weight:800;font-size:16px;cursor:pointer}
@@ -116,14 +117,13 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
   </header>
 
   <section class="screen on" id="sSetup">
-    <h2>出題する標識</h2>
+    <div class="seg modeseg" data-opt="area"><button data-v="eu">ヨーロッパ（国当て）</button><button data-v="jp">日本（地域当て）</button></div>
+    <h2>出題する項目</h2>
     <div class="types" id="typeList"></div>
     <p class="note" id="areaNote"></p>
     <p class="note">標識は国ごとの違いが分かるように描き直した再現図です。地の色・縁の太さ・形・文字など、GeoGuessr で判別に使える特徴を中心に描いています。細かな絵柄（人物のシルエットなど）は実物と異なります。案内標識の文字は、言語で答えが分からないように伏せています。</p>
     <h2>出題設定</h2>
     <div class="opts">
-      <div><div class="opt-label">モード</div>
-        <div class="seg" data-opt="area"><button data-v="eu">ヨーロッパ（国当て）</button><button data-v="jp">日本（地域当て）</button></div></div>
       <div><div class="opt-label">選択肢</div>
         <div class="seg" data-opt="mode"><button data-v="near">近隣国を優先（難しい）</button><button data-v="rand">ランダム</button></div></div>
       <div><div class="opt-label">問題数</div>
