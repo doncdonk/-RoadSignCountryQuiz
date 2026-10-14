@@ -46,6 +46,8 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 .seg button[aria-pressed="true"]{background:var(--blue);font-weight:700}
 .modeseg{margin-top:20px;max-width:100%;flex-wrap:wrap}.modeseg button{flex:1 1 150px}.modeseg button{padding:12px 8px;font-size:15px}
 .lv{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:4px;padding:1px 7px;margin-left:8px;vertical-align:2px;letter-spacing:.02em;white-space:nowrap}
+.allbtn{width:100%;margin-top:20px;padding:16px;font-size:17px;background:linear-gradient(90deg,#F3C316,#f0a92a)}
+.areatag{display:inline-block;font-size:11px;font-weight:700;color:#1d1f21;background:#d9dbd6;border-radius:4px;padding:1px 6px;margin-right:6px}
 .opt-label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 .go{background:var(--yellow);color:#1d1f21;border:0;border-radius:8px;padding:12px 26px;font-weight:800;font-size:16px;cursor:pointer}
@@ -118,6 +120,8 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
   </header>
 
   <section class="screen on" id="sSetup">
+    <button class="go allbtn" id="allBtn">すべての地域・項目からランダムに出題</button>
+    <div class="hint" style="margin-top:6px">ヨーロッパ・日本・アジア・南北アメリカ・アメリカ州当ての全項目を混ぜて出題します（下の問題数と選択肢の設定を使います）。</div>
     <div class="seg modeseg" data-opt="area"><button data-v="eu">ヨーロッパ（国当て）</button><button data-v="jp">日本（地域当て）</button><button data-v="as">アジア（国当て）</button><button data-v="am">南北アメリカ（国当て）</button><button data-v="us">アメリカ（州当て）</button></div>
     <h2>出題する項目</h2>
     <div class="types" id="typeList"></div>
@@ -1066,11 +1070,17 @@ function renderSetup(){
 }
 
 /* ================= quiz ================= */
-let Q=null;
+let Q=null, Q_ALL=false;
+const AREA_LABEL={eu:"ヨーロッパ",jp:"日本",as:"アジア",am:"南北アメリカ",us:"アメリカ州当て"};
 // Each design group is drawn equally often, so rare designs show up as much as the common one
 function activeTypes(){return TYPES.filter(t=>S.types.includes(t.id)&&(t.area||"eu")===S.area)}
-function makeDeck(){
-  const n=+S.count, ts=activeTypes(), deck=[];
+function makeDeck(list){
+  const n=+S.count, ts=list||activeTypes(), deck=[];
+  if(list){ // all-areas mode: each region equally likely, then an item, then a pattern
+    const areas=[...new Set(ts.map(t=>t.area||"eu"))];
+    for(let i=0;i<n;i++){const a=pick(areas),t=pick(ts.filter(x=>(x.area||"eu")===a)),g=pick(t.groups);deck.push({tid:t.id,gid:g.id,country:pick(g.countries)})}
+    return deck;
+  }
   while(deck.length<n){
     shuffle(ts.flatMap(t=>t.groups.map(g=>({t,g})))).forEach(({t,g})=>deck.push({tid:t.id,gid:g.id,country:pick(g.countries)}));
   }
@@ -1092,7 +1102,7 @@ function renderQ(){
   const q=Q.deck[Q.i],t=typeById[q.tid],g=t.groups.find(x=>x.id===q.gid);
   Q.answered=false;Q.opts=buildOptions(t,g,q.country);
   $("#hNum").textContent=Q.i+1;$("#hScore").textContent=Q.score;$("#hStreak").textContent=Q.streak;
-  $("#qType").innerHTML=`<span class="c">${esc(t.cat)}</span>${esc(t.ja)}${lvBadge(t)}<span class="en">${esc(t.en)}</span>`;
+  $("#qType").innerHTML=`<span class="c"><span class="areatag">${AREA_LABEL[t.area||"eu"]}</span>${esc(t.cat)}</span>${esc(t.ja)}${lvBadge(t)}<span class="en">${esc(t.en)}</span>`;
   $("#qSign").innerHTML=g.draw();
   $("#blades").innerHTML=Q.opts.map((c,k)=>`<button class="blade" data-c="${esc(c)}"><span class="k">${k+1}</span><span><span class="en">${esc(dispName(c))}</span><span class="jn">${esc(dispSub(c))}</span></span></button>`).join("");
   $("#fb").classList.remove("on");
@@ -1158,13 +1168,14 @@ function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.to
 $("#homeBtn").onclick=()=>{show("sSetup");renderSetup()};
 $("#typeList").onchange=e=>{const k=e.target.dataset.k;if(!k)return;S.types=e.target.checked?[...S.types,k]:S.types.filter(x=>x!==k);saveS();renderSetup()};
 document.querySelectorAll(".seg").forEach(seg=>seg.onclick=e=>{const b=e.target.closest("button");if(!b)return;S[seg.dataset.opt]=b.dataset.v;saveS();renderSetup()});
-$("#startBtn").onclick=()=>startQuiz(makeDeck());
+$("#startBtn").onclick=()=>{Q_ALL=false;startQuiz(makeDeck())};
+$("#allBtn").onclick=()=>{Q_ALL=true;startQuiz(makeDeck(TYPES.slice()))};
 $("#browseBtn").onclick=openBrowse;
 $("#bSel").onchange=renderBrowse;
 $("#blades").onclick=e=>{const b=e.target.closest(".blade");if(b)answer(b.dataset.c)};
 $("#nextBtn").onclick=next;
 $("#retryMiss").onclick=()=>startQuiz(shuffle(Q.miss.map(({picked,...m})=>m)));
-$("#again").onclick=()=>startQuiz(makeDeck());
+$("#again").onclick=()=>startQuiz(Q_ALL?makeDeck(TYPES.slice()):makeDeck());
 document.addEventListener("keydown",e=>{
   if(!$("#sQuiz").classList.contains("on"))return;
   if(/^[1-4]$/.test(e.key)&&!Q.answered){const b=document.querySelectorAll(".blade")[+e.key-1];if(b)answer(b.dataset.c)}
