@@ -219,6 +219,12 @@ GROUPS.push(["United States","Canada","Mexico"],["Mexico","Guatemala","Honduras"
  ["Brazil","Uruguay","Paraguay","Argentina","Bolivia"],["Dominican Republic","Puerto Rico"],
  ["California","Nevada","Arizona","Utah","Idaho"],["Utah","Arizona","New Mexico","Nevada","Idaho"],["Oklahoma","Kansas","Arkansas","Missouri","New Mexico","Louisiana"],
  ["Louisiana","Arkansas","Alabama","Georgia (US)","Florida","Oklahoma"],["Ohio","Michigan","Pennsylvania","Missouri"],["North Carolina","Georgia (US)","Alabama","Pennsylvania","Florida"],["South Dakota","Kansas","Idaho","Missouri"]);
+Object.assign(JA,{"Alabama": "アラバマ州", "Alaska": "アラスカ州", "Arizona": "アリゾナ州", "Arkansas": "アーカンソー州", "California": "カリフォルニア州", "Colorado": "コロラド州", "Connecticut": "コネチカット州", "Delaware": "デラウェア州", "Florida": "フロリダ州", "Georgia (US)": "ジョージア州", "Hawaii": "ハワイ州", "Idaho": "アイダホ州", "Illinois": "イリノイ州", "Indiana": "インディアナ州", "Iowa": "アイオワ州", "Kansas": "カンザス州", "Kentucky": "ケンタッキー州", "Louisiana": "ルイジアナ州", "Maine": "メイン州", "Maryland": "メリーランド州", "Massachusetts": "マサチューセッツ州", "Michigan": "ミシガン州", "Minnesota": "ミネソタ州", "Mississippi": "ミシシッピ州", "Missouri": "ミズーリ州", "Montana": "モンタナ州", "Nebraska": "ネブラスカ州", "Nevada": "ネバダ州", "New Hampshire": "ニューハンプシャー州", "New Jersey": "ニュージャージー州", "New Mexico": "ニューメキシコ州", "New York": "ニューヨーク州", "North Carolina": "ノースカロライナ州", "North Dakota": "ノースダコタ州", "Ohio": "オハイオ州", "Oklahoma": "オクラホマ州", "Oregon": "オレゴン州", "Pennsylvania": "ペンシルベニア州", "Rhode Island": "ロードアイランド州", "South Carolina": "サウスカロライナ州", "South Dakota": "サウスダコタ州", "Tennessee": "テネシー州", "Texas": "テキサス州", "Utah": "ユタ州", "Vermont": "バーモント州", "Virginia": "バージニア州", "Washington": "ワシントン州", "West Virginia": "ウェストバージニア州", "Wisconsin": "ウィスコンシン州", "Wyoming": "ワイオミング州"});
+GROUPS.push(["Washington","Oregon","Idaho","California","Nevada"],["Montana","Wyoming","Idaho","North Dakota","South Dakota"],["Colorado","Utah","Wyoming","Nebraska","Kansas","New Mexico"],
+ ["Texas","Oklahoma","New Mexico","Louisiana","Arkansas"],["Minnesota","Iowa","Wisconsin","North Dakota","South Dakota"],["Illinois","Indiana","Iowa","Missouri","Wisconsin","Michigan","Kentucky"],
+ ["Ohio","Indiana","Michigan","Kentucky","West Virginia","Pennsylvania"],["Tennessee","Kentucky","Mississippi","Alabama","Georgia (US)","Arkansas"],["Mississippi","Alabama","Louisiana","Tennessee"],
+ ["Virginia","West Virginia","Maryland","North Carolina","Delaware"],["South Carolina","North Carolina","Georgia (US)","Florida"],["New York","New Jersey","Pennsylvania","Connecticut","Vermont"],
+ ["Maine","New Hampshire","Vermont","Massachusetts","Rhode Island","Connecticut"],["Delaware","Maryland","New Jersey","Pennsylvania"],["Alaska","Washington","Hawaii"],["Hawaii","California","Alaska"]);
 const JPREF={};
 const LV={1:["初級","#2f9e5c"],2:["中級","#d08a12"],3:["上級","#c4161c"]};
 const lvBadge=t=>t.level?`<span class="lv" style="background:${LV[t.level][1]}">${"★".repeat(t.level)}${"☆".repeat(3-t.level)} ${LV[t.level][0]}</span>`:"";
@@ -233,7 +239,7 @@ const svg=(body,vb="0 0 200 200")=>`<svg viewBox="${vb}" xmlns="http://www.w3.or
 // Upward warning triangle. border = red stroke width (thick 18 / thin 9)
 function triangle(bg,border,inner){
   const p="100,20 186,168 14,168";
-  const k=border<18?`transform="translate(100 120) scale(1.06) translate(-100 -120)"`:S.area==="am"?"南北アメリカモードは、北米・中米・南米のGeoGuessr対応国から出題します。":S.area==="us"?"アメリカ州当てモードは、州道の標識の形から州を当てます。州名の文字は伏せています（実物の多くは州名入り）。":S.area==="as"?"アジアモードは、東アジア・東南アジア・南アジア・中東・中央アジアのGeoGuessr対応国から出題します。":"";
+  const k=border<18?`transform="translate(100 120) scale(1.06) translate(-100 -120)"`:S.area==="am"?"南北アメリカモードは、北米・中米・南米のGeoGuessr対応国から出題します。":S.area==="us"?"アメリカ州当てモードは、州道の標識やナンバープレートから州を当てます。州名の文字は伏せています（実物の多くは州名入り）。":S.area==="as"?"アジアモードは、東アジア・東南アジア・南アジア・中東・中央アジアのGeoGuessr対応国から出題します。":"";
   return svg(`<g ${k}><polygon points="${p}" fill="${bg}" stroke="#fff" stroke-width="${border+8}" stroke-linejoin="round"/>
    <polygon points="${p}" fill="${bg}" stroke="${C.red}" stroke-width="${border}" stroke-linejoin="round"/>${inner}</g>`);
 }
@@ -634,6 +640,38 @@ const SHIELD={
    return svg(`<rect x="10" y="10" width="180" height="180" rx="10" fill="#F7D117" stroke="#141414" stroke-width="2"/>${r}<circle cx="100" cy="100" r="36" fill="#F7D117" stroke="#C8102E" stroke-width="6"/>${numT(100,102,"#141414",28)}`)}
 };
 
+
+/* ---------- US: front plate & state plates ---------- */
+function carFront(hasPlate){
+  const id="cf"+(UID++);
+  const plate=hasPlate?`<defs><filter id="${id}"><feGaussianBlur stdDeviation="2.5"/></filter></defs><rect x="74" y="146" width="52" height="26" rx="3" fill="#fff" stroke="#555" stroke-width="1.2"/><rect x="80" y="152" width="40" height="12" rx="3" fill="#1d3f8f" opacity=".7" filter="url(#${id})"/>`
+    :`<rect x="74" y="146" width="52" height="26" rx="3" fill="none" stroke="#7d8287" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>`;
+  return svg(`<rect x="0" y="182" width="200" height="18" fill="#8a8d82"/>
+   <path d="M38 96 Q46 54 70 50 H130 Q154 54 162 96 Z" fill="#3c4a5c"/><path d="M52 92 Q58 62 74 60 H126 Q142 62 148 92 Z" fill="#9fc4de" opacity=".85"/>
+   <rect x="24" y="94" width="152" height="70" rx="18" fill="#c23b32"/><rect x="18" y="140" width="164" height="38" rx="12" fill="#2b2f33"/>
+   <ellipse cx="46" cy="118" rx="16" ry="10" fill="#f4f1d0" stroke="#444" stroke-width="1.5"/><ellipse cx="154" cy="118" rx="16" ry="10" fill="#f4f1d0" stroke="#444" stroke-width="1.5"/>
+   <rect x="70" y="108" width="60" height="22" rx="5" fill="#1d1f22"/><path d="M74 114 H126 M74 120 H126 M74 126 H126" stroke="#555" stroke-width="1.5"/>
+   <rect x="22" y="174" width="22" height="12" rx="3" fill="#141414"/><rect x="156" y="174" width="22" height="12" rx="3" fill="#141414"/>${plate}`);
+}
+function usPl(bg,txt,o={}){
+  const pre=(o.top?`<path d="M35 62 H165 Q170 62 170 67 V${62+o.top[1]} H30 V67 Q30 62 35 62 Z" fill="${o.top[0]}"/>`:"")
+    +(o.bottom?`<path d="M30 ${132-o.bottom[1]} H170 V127 Q170 132 165 132 H35 Q30 132 30 127 Z" fill="${o.bottom[0]}"/>`:"");
+  return svg(bplate(30,62,140,70,bg,[[16,o.top?Math.max(22,o.top[1]+6):20,108,28,txt,o.op||.75]],{pre}));
+}
+const USPL={
+ nm:()=>usPl("#F6D23C","#C8102E"),
+ ak:()=>usPl("#F2C200","#1f3f8f"),
+ ny:()=>usPl("#F2A21E","#1d2f6f",{top:["#2a2a2a",8]}),
+ de:()=>usPl("#1c2a4a","#d8b24a",{op:.85}),
+ vt:()=>usPl("#1f6b3a","#ffffff",{op:.85}),
+ ms:()=>usPl("#F3E7B0","#1f3f8f"),
+ pa:()=>usPl("#fff","#1f3f8f",{top:["#1f4fa0",14],bottom:["#F2C200",10]}),
+ id:()=>usPl("#fff","#1f3f8f",{top:["#8b2e22",14],bottom:["#1f4fa0",10]}),
+ ct:()=>usPl("#fff","#1f3f8f",{top:["#4d8fe0",34]}),
+ nj:()=>usPl("#fff","#141414",{top:["#F2D04A",34]}),
+ mn:()=>usPl("#fff","#1f3f8f",{top:["#9cc3e6",16]})
+};
+
 /* ================= sign data ================= */
 // Countries using the most common (white, thick red border) design in each type
 const WHITE_COMMON=["Germany","France","Italy","Spain","Portugal","Netherlands","Belgium","Luxembourg","Austria","Switzerland",
@@ -783,6 +821,23 @@ const TYPES=[
    {id:"bo",draw:AMPL.bo,countries:["Bolivia"],tip:"白地に青い文字で、ぼかすと薄い青に見える。ボリビア。"},
    {id:"orange",draw:AMPL.orange,countries:["Chile","Ecuador"],tip:"オレンジのプレートはチリとエクアドルのタクシーや営業車。"},
    {id:"brred",draw:AMPL.brred,countries:["Brazil"],tip:"赤いプレートはブラジルの営業車（旧型）。"}]},
+ {id:"us_front",area:"us",cat:"アメリカ・ナンバープレート",ja:"前のナンバープレートの有無",en:"Front plate or not",groups:[
+   {id:"rear",draw:()=>carFront(false),countries:["Alabama", "Alaska", "Arizona", "Arkansas", "Delaware", "Florida", "Georgia (US)", "Indiana", "Kansas", "Kentucky", "Louisiana", "Michigan", "Mississippi", "New Mexico", "North Carolina", "Ohio", "Oklahoma", "Pennsylvania", "South Carolina", "Tennessee", "Utah", "West Virginia"],
+    tip:"前のナンバーが無ければ、後ろだけで良い22州のどれか。南東部と中西部の東側に多い。オハイオは2020年、アラスカは2022年、ユタは2025年から前なしになったので、古い画像では前ナンバーが付いていることがある。"},
+   {id:"front",draw:()=>carFront(true),countries:["California", "Colorado", "Connecticut", "Hawaii", "Idaho", "Illinois", "Iowa", "Maine", "Maryland", "Massachusetts", "Minnesota", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New York", "North Dakota", "Oregon", "Rhode Island", "South Dakota", "Texas", "Vermont", "Virginia", "Washington", "Wisconsin", "Wyoming"],
+    tip:"前のナンバーがあれば、前後とも必要な28州のどれか。西部・北東部・テキサスなど。地図で前なしの州と範囲を見比べておくと絞り込みに使える。"}]},
+ {id:"us_plates",area:"us",cat:"アメリカ・ナンバープレート",ja:"州のナンバープレート（ぼかし）",en:"State license plates (blurred)",groups:[
+   {id:"nm",draw:USPL.nm,countries:["New Mexico"],tip:"黄色地に赤い文字。砂漠の景色ならニューメキシコ（ターコイズ色の版もある）。"},
+   {id:"ak",draw:USPL.ak,countries:["Alaska"],tip:"黄色地に青い文字。寒い山の景色ならアラスカ。"},
+   {id:"ny",draw:USPL.ny,countries:["New York"],tip:"濃いオレンジ〜金色。ニューヨーク（2020年以降は新しいデザインも混在）。"},
+   {id:"de",draw:USPL.de,countries:["Delaware"],tip:"ほぼ黒に見える濃紺に金の文字。デラウェア。"},
+   {id:"vt",draw:USPL.vt,countries:["Vermont"],tip:"ほぼ全体が緑。バーモント。"},
+   {id:"ms",draw:USPL.ms,countries:["Mississippi"],tip:"全体が薄い黄色。ミシシッピ。"},
+   {id:"pa",draw:USPL.pa,countries:["Pennsylvania"],tip:"白地で上に青、下に黄色の帯。ペンシルベニア。"},
+   {id:"id",draw:USPL.id,countries:["Idaho"],tip:"白地で上が赤茶色、下が青。アイダホ。"},
+   {id:"ct",draw:USPL.ct,countries:["Connecticut"],tip:"上半分が明るい青、下半分が白。コネチカット（イリノイも似て見えることがある）。"},
+   {id:"nj",draw:USPL.nj,countries:["New Jersey"],tip:"上半分が黄色、下半分が白。ニュージャージー。"},
+   {id:"mn",draw:USPL.mn,countries:["Minnesota","Montana","Iowa"],tip:"白地の上部に薄い青の帯。ミネソタ、モンタナ、アイオワ。"}]},
  {id:"us_shield",area:"us",cat:"アメリカ・州道",ja:"州道の標識（ルートマーカー）",en:"State route shields",groups:[
    {id:"ca",draw:SHIELD.california,countries:["California"],tip:"緑のスペード（鉱夫のシャベル）型。ゴールドラッシュにちなむカリフォルニア州。"},
    {id:"pa",draw:SHIELD.pennsylvania,countries:["Pennsylvania"],tip:"要石（キーストーン）型。「キーストーン州」ペンシルベニア。"},
