@@ -48,6 +48,12 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 .lv{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:4px;padding:1px 7px;margin-left:8px;vertical-align:2px;letter-spacing:.02em;white-space:nowrap}
 .allbtn{width:100%;margin-top:20px;padding:16px;font-size:17px;background:linear-gradient(90deg,#F3C316,#f0a92a)}
 .areatag{display:inline-block;font-size:11px;font-weight:700;color:#1d1f21;background:#d9dbd6;border-radius:4px;padding:1px 6px;margin-right:6px}
+.pick{background:#24313d;border-radius:10px;padding:8px}
+.pick svg{display:block;width:100%;height:auto}
+.pk path{fill:var(--f,#6c7a8c);stroke:var(--f,#6c7a8c);stroke-width:.8;cursor:pointer;transition:fill .12s,stroke .12s}
+.pk:hover path,.pk:focus path{fill:#9fc0ea;stroke:#9fc0ea}
+.pk-edge{fill:none;stroke:#e9ecef;stroke-width:1.6;pointer-events:none}
+.pick-hint{font-size:13px;color:var(--muted);margin-bottom:8px}
 .opt-label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 .go{background:var(--yellow);color:#1d1f21;border:0;border-radius:8px;padding:12px 26px;font-weight:800;font-size:16px;cursor:pointer}
@@ -946,6 +952,14 @@ function drawZoneMap(M,REF,items,box){
     labels+=`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle" dominant-baseline="middle" font-size="${it.size||15}" font-weight="700" fill="#fff" stroke="#1d2125" stroke-width="3" paint-order="stroke" style="font-family:var(--font)">${esc(it.label)}</text>`});
   return `<svg viewBox="0 0 ${M.W} ${M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域の色分け地図">${box||""}${paths}${labels}</svg>`;
 }
+function drawPickMap(z){
+  const used=new Set();let g="";
+  const SH=["#6f7d8f","#8a8270","#728a7a","#8c7484","#7a8698","#93896f","#6e8a8a","#8a7a6c","#7c7f94"];
+  z.items.forEach((it,i)=>{const ids=(z.REF[it.key]||[]).filter(id=>z.M.P[id]);ids.forEach(id=>used.add(id));
+    g+=`<g class="pk" data-c="${esc(it.key)}" tabindex="0" role="button" style="--f:${SH[i%SH.length]}">${ids.map(id=>`<path d="${z.M.P[id]}"/>`).join("")}</g>`});
+  let bg="";for(const [id,d] of Object.entries(z.M.P)) if(!used.has(id)) bg+=`<path d="${d}" fill="#3e4349" stroke="#2b2f33" stroke-width=".5"/>`;
+  return `<div class="pick-hint">地図上で地域をクリック（タップ）して回答</div><div class="pick"><svg viewBox="0 0 ${z.M.W} ${z.M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域を選ぶ地図">${bg}${g}</svg></div>`;
+}
 function drawSubMap(roles,M,REF){
   const F={right:"#2fbf6a",same:"#1d6e43",wrong:"#e0474c",opt:"#3d6fc4"}, RANK={right:4,wrong:3,same:2,opt:1};const pr={};
   for(const [k,r] of Object.entries(roles)) (REF[k]||[]).forEach(c=>{if(!pr[c]||RANK[r]>RANK[pr[c]])pr[c]=r});
@@ -1171,11 +1185,11 @@ const TYPES=[
  {id:"jpcity4",area:"jp",city:1,level:4,cat:"日本・都市",ja:"都市→都道府県④-A：似た名前・同じ名前の市",en:"Similar & same-name cities",groups:cityGroups4(CITY4,"T")},
  {id:"jpcity5",area:"jp",city:1,level:4,cat:"日本・都市",ja:"都市→都道府県④-B：旧国名・地域名のひっかけ",en:"Old province names",groups:cityGroups4(CITY4,"P")},
  {id:"jpcity6",area:"jp",city:1,level:4,cat:"日本・都市",ja:"都市→都道府県④-C：難読・マイナーな市",en:"Hard-to-read & lesser-known",groups:cityGroups4(CITY4,"M")},
- {id:"fr_phone",area:"eu",mapKind:"fr",rule:"規則：01パリ周辺を中心に、02北西→03北東→04南東→05南西と時計回りに並ぶ。06・07は携帯、09はIP電話なので地域は分からない。",cat:"フランス・電話番号",ja:"フランスの電話番号：先頭2桁 → 地域",en:"French phone zones",
+ {id:"fr_phone",mapPick:1,area:"eu",mapKind:"fr",rule:"規則：01パリ周辺を中心に、02北西→03北東→04南東→05南西と時計回りに並ぶ。06・07は携帯、09はIP電話なので地域は分からない。",cat:"フランス・電話番号",ja:"フランスの電話番号：先頭2桁 → 地域",en:"French phone zones",
    zone:()=>({M:FRMAP,REF:FRREF,items:FRZ.map(z=>({key:"fz"+z[0],label:z[0]}))}),
    groups:FRZ.map(([z,n,sub])=>({id:"fz"+z,draw:()=>phoneIntl(z,` ${["12","34","56","78"].map(()=>"**").join(" ")}`,pick(FRSHOP),"Tél."),countries:["fz"+z],
      tip:`${z} で始まる固定電話は${n}（${sub}）。`}))},
- {id:"br_ddd1",area:"am",level:1,mapKind:"br",rule:"規則：南東部（1サンパウロ、2・3）→南部（4・5）→中西部（6）→北東部（7・8）→北部（9）の順に数字が大きくなる。",cat:"ブラジル・市外局番",ja:"ブラジルの市外局番（DDD）①：1桁目 → 地域",en:"Brazil DDD (1st digit)",
+ {id:"br_ddd1",mapPick:1,area:"am",level:1,mapKind:"br",rule:"規則：南東部（1サンパウロ、2・3）→南部（4・5）→中西部（6）→北東部（7・8）→北部（9）の順に数字が大きくなる。",cat:"ブラジル・市外局番",ja:"ブラジルの市外局番（DDD）①：1桁目 → 地域",en:"Brazil DDD (1st digit)",
    zone:()=>({M:BRMAP,REF:BRREF,items:BR1.map(r=>({key:"bd"+r[0],label:r[0]+"x"}))}),
    groups:BR1.map(([d,n,sts])=>({id:"bd"+d,draw:()=>phoneIntl(`(${pick(ddd1(d))})`," ****-****",pick(BRSHOP),"Tel."),countries:["bd"+d],
      tip:`${d}で始まるDDDは${n}。`}))},
@@ -1184,12 +1198,12 @@ const TYPES=[
      color:ZCOL[+BRDDD[st][0]-1]})),legend:BR1.map(r=>r[0]+"x："+r[1])}),
    groups:Object.entries(BRDDD).flatMap(([st,codes])=>codes.split(" ").map(c=>({id:"dd"+c,draw:()=>phoneIntl(`(${c})`," ****-****",pick(BRSHOP),"Tel."),countries:["bs"+st],
      tip:`(${c}) は${BRST[st]}（${BRREG[st]}）。${st==="SP"?"11はサンパウロ市。":st==="RJ"?"21はリオデジャネイロ市。":st==="DF"?"61はブラジリア。":""}`})))},
- {id:"au_phone",area:"oc",mapKind:"au",cat:"オーストラリア・電話番号",ja:"オーストラリアの市外局番 → 州",en:"Australian area codes",
+ {id:"au_phone",mapPick:1,area:"oc",mapKind:"au",cat:"オーストラリア・電話番号",ja:"オーストラリアの市外局番 → 州",en:"Australian area codes",
    rule:"規則：東海岸は北から07（ブリスベン）→02（シドニー）→03（メルボルン・タスマニア）。残りの広大な西・中央・北部はすべて08。04は携帯電話。",
    zone:()=>({M:AUMAP,REF:AUREF,items:AUZ.map(z=>({key:"au"+z[0],label:z[0]}))}),
    groups:AUZ.map(([z,n,sub])=>({id:"au"+z,draw:()=>phoneIntl(`(${z})`," **** ****",pick(["Smith's Bakery","Coastal Motors","Main St Pharmacy","Outback Supplies"]),"Ph"),countries:["au"+z],
      tip:`(${z}) は${n}（${sub}）。`+(z==="08"?"国土の西半分以上が08なので、08なら西・中央・北部のどこか。":"")}))},
- {id:"id_phone",area:"as",mapKind:"id",cat:"インドネシア・電話番号",ja:"インドネシアの市外局番 → 地域（島）",en:"Indonesian area codes",
+ {id:"id_phone",mapPick:1,area:"as",mapKind:"id",cat:"インドネシア・電話番号",ja:"インドネシアの市外局番 → 地域（島）",en:"Indonesian area codes",
    rule:"規則：0の次の数字で島が分かる。2ジャワ西・中部、3ジャワ東部〜小スンダ列島、4スラウェシ、5カリマンタン、6スマトラ北部、7スマトラ中南部、9マルク・パプア。08は携帯電話。",
    zone:()=>({M:IDMAP,REF:IDREF,items:IDZ.map(z=>({key:"id"+z[0],label:z[0]+"x"}))}),
    groups:IDZ.flatMap(([z,n,sub,ids,codes])=>codes.split(" ").map(c=>({id:"idc"+c,draw:()=>phoneIntl(`(${c})`,c.length===3?" ****-****":" ******",pick(["Toko Makmur","Bengkel Jaya","Apotek Sehat","Warung Sari"]),"Telp."),countries:["id"+z],
@@ -1436,6 +1450,10 @@ function renderQ(){
   $("#hNum").textContent=Q.i+1;$("#hScore").textContent=Q.score;$("#hStreak").textContent=Q.streak;
   $("#qType").innerHTML=`<span class="c"><span class="areatag">${AREA_LABEL[t.area||"eu"]}</span>${esc(t.cat)}</span>${esc(t.ja)}${lvBadge(t)}<span class="en">${esc(t.en)}</span>`;
   $("#qSign").innerHTML=g.draw();
+  $("#map").parentElement.style.display=t.mapPick?"none":"";
+  if(t.mapPick){const z=t.zone();Q.opts=z.items.map(it=>it.key);$("#blades").innerHTML=drawPickMap(z);
+    document.querySelectorAll("#blades .pk").forEach(el=>{el.onclick=()=>answer(el.dataset.c);el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();answer(el.dataset.c)}}});
+    $("#fb").classList.remove("on");return;}
   $("#blades").innerHTML=Q.opts.map((c,k)=>`<button class="blade" data-c="${esc(c)}"><span class="k">${k+1}</span><span><span class="en">${esc(dispName(c))}</span><span class="jn">${esc(dispSub(c))}</span></span></button>`).join("");
   $("#fb").classList.remove("on");
 }
@@ -1459,15 +1477,17 @@ function answer(c){
   const others=g.countries.filter(x=>x!==q.country);
   const multiNote=(t.multi||[]).includes(q.country)?`（${JA[q.country]}は他のデザインも併用しています）`:"";
   $("#share").textContent=(others.length?`同じデザインの国: ${others.map(x=>JA[x]||x).join("、")}`:(t.area==="jp"?"":"このデザインはこの国だけです。"))+multiNote;
-  $("#compare").innerHTML=Q.opts.map(oc=>{const og=groupOf(t,oc);
+  const cmpOpts=t.mapPick?[...new Set([q.country,c])]:Q.opts;
+  $("#compare").innerHTML=cmpOpts.map(oc=>{const og=groupOf(t,oc);
     const cls=(oc===q.country?" is-right":"")+(oc===c&&!ok?" is-picked":"");
     const dg=oc===q.country?g:(og||{draw:()=>citySign(dispName(oc).replace(/[都道府県]$/,""),"")});
     return `<div class="cmp${cls}"><div class="img">${dg.draw()}</div><div class="nm">${esc(dispName(oc))}<small>${esc(dispSub(oc))}</small></div></div>`}).join("");
   const roles={};
-  Q.opts.forEach(o=>roles[o]="opt");
+  if(!t.mapPick) Q.opts.forEach(o=>roles[o]="opt");
   g.countries.forEach(x=>roles[x]="same");
   if(!ok) roles[c]="wrong";
   roles[q.country]="right";
+  if(t.mapPick){const z=t.zone();$("#blades").innerHTML=`<div class="pick">${drawSubMap(roles,z.M,z.REF)}</div>`}
   $("#map").innerHTML=t.mapKind==="au"?drawSubMap(roles,AUMAP,AUREF):t.mapKind==="id"?drawSubMap(roles,IDMAP,IDREF):t.mapKind==="fr"?drawSubMap(roles,FRMAP,FRREF):t.mapKind==="br"?drawSubMap(roles,BRMAP,BRREF):t.area==="jp"?drawJMap(roles):t.area==="as"?drawMap(roles,ASMAP):t.area==="am"?drawMap(roles,AMMAP):t.area==="us"?drawMap(roles,USMAP):drawMap(roles);
   $("#nextBtn").textContent=Q.i+1<Q.deck.length?"次の問題":"結果を見る";
   $("#fb").classList.add("on");$("#nextBtn").focus({preventScroll:true});
@@ -1517,7 +1537,7 @@ $("#retryMiss").onclick=()=>startQuiz(shuffle(Q.miss.map(({picked,...m})=>m)));
 $("#again").onclick=()=>startQuiz(Q_ALL?makeDeck(TYPES.slice()):makeDeck());
 document.addEventListener("keydown",e=>{
   if(!$("#sQuiz").classList.contains("on"))return;
-  if(/^[1-4]$/.test(e.key)&&!Q.answered){const b=document.querySelectorAll(".blade")[+e.key-1];if(b)answer(b.dataset.c)}
+  if(/^[1-4]$/.test(e.key)&&!Q.answered&&!typeById[Q.deck[Q.i].tid].mapPick){const b=document.querySelectorAll(".blade")[+e.key-1];if(b)answer(b.dataset.c)}
   else if((e.key==="Enter"||e.key===" ")&&Q.answered){e.preventDefault();next()}
 });
 renderSetup();
