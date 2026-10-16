@@ -51,7 +51,10 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 .pick{background:#24313d;border-radius:10px;padding:8px}
 .pick svg{display:block;width:100%;height:auto}
 .pk path{fill:var(--f,#6c7a8c);stroke:var(--f,#6c7a8c);stroke-width:.8;cursor:pointer;transition:fill .12s,stroke .12s}
-.pk:hover path,.pk:focus path{fill:#9fc0ea;stroke:#9fc0ea}
+.pk:hover path,.pk:focus path,.pk:hover circle,.pk:focus circle{fill:#9fc0ea;stroke:#9fc0ea}
+.pk circle{cursor:pointer}
+.pick-c .pk path{stroke:#262a2f;stroke-width:.6}
+.pick-c .pk:hover path{stroke:#262a2f}
 .pk-edge{fill:none;stroke:#e9ecef;stroke-width:1.6;pointer-events:none}
 .pick-hint{font-size:13px;color:var(--muted);margin-bottom:8px}
 .opt-label{font-size:13px;color:var(--muted);margin-bottom:6px}
@@ -135,6 +138,8 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
     <p class="note">標識は国ごとの違いが分かるように描き直した再現図です。地の色・縁の太さ・形・文字など、GeoGuessr で判別に使える特徴を中心に描いています。細かな絵柄（人物のシルエットなど）は実物と異なります。案内標識の文字は、言語で答えが分からないように伏せています。</p>
     <h2>出題設定</h2>
     <div class="opts">
+      <div><div class="opt-label">回答方法</div>
+        <div class="seg" data-opt="answer"><button data-v="choice">4択</button><button data-v="map">地図で選ぶ</button></div></div>
       <div><div class="opt-label">選択肢</div>
         <div class="seg" data-opt="mode"><button data-v="near">近隣国を優先（難しい）</button><button data-v="rand">ランダム</button></div></div>
       <div><div class="opt-label">問題数</div>
@@ -959,13 +964,21 @@ function drawZoneMap(M,REF,items,box){
     labels+=`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle" dominant-baseline="middle" font-size="${it.size||15}" font-weight="700" fill="#fff" stroke="#1d2125" stroke-width="3" paint-order="stroke" style="font-family:var(--font)">${esc(it.label)}</text>`});
   return `<svg viewBox="${M.view?M.view.join(" "):"0 0 "+M.W+" "+M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域の色分け地図">${box||""}${paths}${labels}</svg>`;
 }
+function countryPickZone(t){
+  const W={eu:typeof MAP!=="undefined"?MAP:null,as:ASMAP,am:AMMAP,af:AFMAP,us:USMAP}[t.area||"eu"];
+  if(!W||t.ref||t.city) return null;
+  const M=zmOf(W);const keys=[...new Set(t.groups.flatMap(g=>g.countries))].filter(k=>M.P[k]);
+  if(keys.length<2) return null;
+  return {M,REF:Object.fromEntries(keys.map(k=>[k,[k]])),items:keys.map(k=>({key:k})),world:W};
+}
 function drawPickMap(z){
   const used=new Set();let g="";
   const SH=["#6f7d8f","#8a8270","#728a7a","#8c7484","#7a8698","#93896f","#6e8a8a","#8a7a6c","#7c7f94"];
   z.items.forEach((it,i)=>{const ids=(z.REF[it.key]||[]).filter(id=>z.M.P[id]);ids.forEach(id=>used.add(id));
     g+=`<g class="pk" data-c="${esc(it.key)}" tabindex="0" role="button" style="--f:${SH[i%SH.length]}">${ids.map(id=>`<path d="${z.M.P[id]}"/>`).join("")}</g>`});
-  let bg="";for(const [id,d] of Object.entries(z.M.P)) if(!used.has(id)) bg+=`<path d="${d}" fill="#3e4349" stroke="#2b2f33" stroke-width=".5"/>`;
-  return `<div class="pick-hint">地図上で地域をクリック（タップ）して回答</div><div class="pick"><svg viewBox="0 0 ${z.M.W} ${z.M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域を選ぶ地図">${bg}${g}</svg></div>`;
+  let bg=z.world&&z.world.bg?`<path d="${z.world.bg}" fill="#33383e"/>`:"";for(const [id,d] of Object.entries(z.M.P)) if(!used.has(id)) bg+=`<path d="${d}" fill="#3e4349" stroke="#2b2f33" stroke-width=".5"/>`;
+  if(z.M.A) z.items.forEach((it,i)=>{const id=it.key;if(z.M.A[id]!=null&&z.M.A[id]<60&&z.M.C[id]) g=g.replace(`data-c="${esc(id)}" tabindex="0" role="button" style="--f:${SH[i%SH.length]}">`,`data-c="${esc(id)}" tabindex="0" role="button" style="--f:${SH[i%SH.length]}"><circle cx="${z.M.C[id][0]}" cy="${z.M.C[id][1]}" r="7" fill="var(--f)" stroke="#e9ecef" stroke-width="1.5"/>`)});
+  return `<div class="pick-hint">地図上で${z.world?"国（州）":"地域"}をクリック（タップ）して回答${z.world?"。小さな国は丸印をクリック":""}</div><div class="pick${z.world?" pick-c":""}"><svg viewBox="0 0 ${z.M.W} ${z.M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域を選ぶ地図">${bg}${g}</svg></div>`;
 }
 function drawSubMap(roles,M,REF){
   const F={right:"#2fbf6a",same:"#1d6e43",wrong:"#e0474c",opt:"#3d6fc4"}, RANK={right:4,wrong:3,same:2,opt:1};const pr={};
@@ -1589,7 +1602,7 @@ const cname=c=>`${dispName(c)}（${dispSub(c)}）`;
 
 /* ================= settings ================= */
 const S=load("rsq2_settings",{mode:"near",count:"20",types:TYPES.map(t=>t.id)});
-S.area=S.area||"eu"; S.known=S.known||S.types.slice();
+S.area=S.area||"eu"; S.answer=S.answer||"choice"; S.known=S.known||S.types.slice();
 TYPES.forEach(t=>{if(!S.known.includes(t.id)){S.known.push(t.id);if(!S.types.includes(t.id))S.types.push(t.id)}});
 const saveS=()=>store("rsq2_settings",S);
 function renderSetup(){
@@ -1637,8 +1650,9 @@ function renderQ(){
   $("#hNum").textContent=Q.i+1;$("#hScore").textContent=Q.score;$("#hStreak").textContent=Q.streak;
   $("#qType").innerHTML=`<span class="c"><span class="areatag">${AREA_LABEL[t.area||"eu"]}</span>${esc(t.cat)}</span>${esc(t.ja)}${lvBadge(t)}<span class="en">${esc(t.en)}</span>`;
   $("#qSign").innerHTML=g.draw();
-  $("#map").parentElement.style.display=t.mapPick?"none":"";
-  if(t.mapPick){const z=t.zone();Q.opts=z.items.map(it=>it.key);$("#blades").innerHTML=drawPickMap(z);
+  Q.pick=t.mapPick?t.zone():(S.answer==="map"?countryPickZone(t):null);
+  $("#map").parentElement.style.display=Q.pick?"none":"";
+  if(Q.pick){const z=Q.pick;Q.opts=z.items.map(it=>it.key);$("#blades").innerHTML=drawPickMap(z);
     document.querySelectorAll("#blades .pk").forEach(el=>{el.onclick=()=>answer(el.dataset.c);el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();answer(el.dataset.c)}}});
     $("#fb").classList.remove("on");return;}
   $("#blades").innerHTML=Q.opts.map((c,k)=>`<button class="blade" data-c="${esc(c)}"><span class="k">${k+1}</span><span><span class="en">${esc(dispName(c))}</span><span class="jn">${esc(dispSub(c))}</span></span></button>`).join("");
@@ -1647,14 +1661,14 @@ function renderQ(){
 function answer(c){
   if(Q.answered)return;Q.answered=true;
   const q=Q.deck[Q.i],t=typeById[q.tid],g=t.groups.find(x=>x.id===q.gid);
-  const ok=c===q.country;
+  const ok=c===q.country||g.countries.includes(c);
   const st=load("rsq2_stats",{});const s=st[q.country]||{s:0,c:0};s.s++;if(ok)s.c++;st[q.country]=s;store("rsq2_stats",st);
   if(ok){Q.score++;Q.streak++}else{Q.streak=0;Q.miss.push({...q,picked:c})}
   $("#hScore").textContent=Q.score;$("#hStreak").textContent=Q.streak;
   document.querySelectorAll(".blade").forEach(b=>{b.disabled=true;const bc=b.dataset.c;
     b.classList.add(bc===q.country?"right":bc===c?"wrong":"dim")});
   const v=$("#verdict");v.className="verdict "+(ok?"ok":"ng");
-  v.textContent=ok?`正解！ ${cname(q.country)}`:`不正解。正解は ${cname(q.country)}`;
+  v.textContent=ok?`正解！ ${cname(ok&&c!==q.country?c:q.country)}`:`不正解。正解は ${cname(q.country)}`+(Q.pick&&g.countries.length>1?` ほか（地図の濃い緑の国も正解）`:"");
   let tips=`<div class="tip">${esc(g.tip)}</div>`;
   if(!ok){
     if(t.city){const pc=c.slice(2);tips+=`<div class="tip">あなたが選んだ${esc(PREF_FULL[pc])}の県庁所在地は${esc(CAPITAL[pc])}。</div>`}
@@ -1664,17 +1678,18 @@ function answer(c){
   const others=g.countries.filter(x=>x!==q.country);
   const multiNote=(t.multi||[]).includes(q.country)?`（${JA[q.country]}は他のデザインも併用しています）`:"";
   $("#share").textContent=(others.length?`同じデザインの国: ${others.map(x=>JA[x]||x).join("、")}`:(t.area==="jp"?"":"このデザインはこの国だけです。"))+multiNote;
-  const cmpOpts=t.mapPick?[...new Set([q.country,c])]:Q.opts;
+  const cmpOpts=Q.pick?[...new Set([q.country,c])]:Q.opts;
   $("#compare").innerHTML=cmpOpts.map(oc=>{const og=groupOf(t,oc);
     const cls=(oc===q.country?" is-right":"")+(oc===c&&!ok?" is-picked":"");
     const dg=oc===q.country?g:(og||{draw:()=>citySign(dispName(oc).replace(/[都道府県]$/,""),"")});
     return `<div class="cmp${cls}"><div class="img">${dg.draw()}</div><div class="nm">${esc(dispName(oc))}<small>${esc(dispSub(oc))}</small></div></div>`}).join("");
   const roles={};
-  if(!t.mapPick) Q.opts.forEach(o=>roles[o]="opt");
+  if(!Q.pick) Q.opts.forEach(o=>roles[o]="opt");
   g.countries.forEach(x=>roles[x]="same");
   if(!ok) roles[c]="wrong";
   roles[q.country]="right";
   if(t.mapPick){const z=t.zone();$("#blades").innerHTML=`<div class="pick">${drawSubMap(roles,z.M,z.REF)}</div>`}
+  else if(Q.pick){if(ok)roles[c]="right";$("#blades").innerHTML=`<div class="pick">${drawMap(roles,Q.pick.world)}</div>`}
   $("#map").innerHTML=t.mapKind==="za"?drawSubMap(roles,ZAMAP,ZAREF):t.area==="af"?drawMap(roles,AFMAP):t.mapKind==="au"?drawSubMap(roles,AUMAP,AUREF):t.mapKind==="id"?drawSubMap(roles,IDMAP,IDREF):t.mapKind==="fr"?drawSubMap(roles,FRMAP,FRREF):t.mapKind==="br"?drawSubMap(roles,BRMAP,BRREF):t.area==="jp"?drawJMap(roles):t.area==="as"?drawMap(roles,ASMAP):t.area==="am"?drawMap(roles,AMMAP):t.area==="us"?drawMap(roles,USMAP):drawMap(roles);
   $("#nextBtn").textContent=Q.i+1<Q.deck.length?"次の問題":"結果を見る";
   $("#fb").classList.add("on");$("#nextBtn").focus({preventScroll:true});
@@ -1725,7 +1740,7 @@ $("#retryMiss").onclick=()=>startQuiz(shuffle(Q.miss.map(({picked,...m})=>m)));
 $("#again").onclick=()=>startQuiz(Q_ALL?makeDeck(TYPES.filter(t=>!t.ref)):makeDeck());
 document.addEventListener("keydown",e=>{
   if(!$("#sQuiz").classList.contains("on"))return;
-  if(/^[1-4]$/.test(e.key)&&!Q.answered&&!typeById[Q.deck[Q.i].tid].mapPick){const b=document.querySelectorAll(".blade")[+e.key-1];if(b)answer(b.dataset.c)}
+  if(/^[1-4]$/.test(e.key)&&!Q.answered&&!Q.pick){const b=document.querySelectorAll(".blade")[+e.key-1];if(b)answer(b.dataset.c)}
   else if((e.key==="Enter"||e.key===" ")&&Q.answered){e.preventDefault();next()}
 });
 renderSetup();
