@@ -57,6 +57,16 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 .pick-c .pk:hover path{stroke:#262a2f}
 .pk-edge{fill:none;stroke:#e9ecef;stroke-width:1.6;pointer-events:none}
 .pick-hint{font-size:13px;color:var(--muted);margin-bottom:8px}
+.nflow{display:grid;gap:6px}
+.nflow div{display:flex;flex-wrap:wrap;gap:4px 12px;background:var(--asphalt-2);border-left:4px solid var(--yellow);border-radius:4px;padding:8px 12px;font-size:14px}
+.nflow b{color:#9fd4ff;font-weight:700}
+.ntab-wrap{overflow-x:auto}
+.ntab{width:100%;border-collapse:collapse;min-width:640px;font-size:13px}
+.ntab th,.ntab td{border:1px solid var(--asphalt-3);padding:8px;vertical-align:top;text-align:left}
+.ntab thead th{background:var(--asphalt-2);font-size:14px;white-space:nowrap}
+.ntab tbody th{background:var(--asphalt-2);width:110px}
+.nf{display:inline-block;width:27px;height:18px;vertical-align:-4px;margin-right:6px}.nf svg{width:100%;height:100%}
+.nv{background:var(--panel);border-radius:6px;width:96px;height:96px;padding:6px;margin-bottom:6px}.nv svg{width:100%;height:100%}
 .opt-label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 .go{background:var(--yellow);color:#1d1f21;border:0;border-radius:8px;padding:12px 26px;font-weight:800;font-size:16px;cursor:pointer}
@@ -1127,6 +1137,62 @@ function afFlag(c){
   return `<svg viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(c)}の国旗"><rect width="30" height="20" fill="#fff"/>${b}<rect width="30" height="20" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".4"/></svg>`;
 }
 
+
+/* ---------- Nordic comparison (Norway / Sweden / Finland) ---------- */
+function nRoad(o){
+  const side=o.side==="dash"?`stroke-dasharray="10 22"`:"";
+  let center="";
+  if(o.center==="yellow") center=`<path d="M100 0 V200" stroke="#E8A020" stroke-width="5" stroke-dasharray="26 14"/>`;
+  if(o.center==="white") center=`<path d="M100 0 V200" stroke="#fff" stroke-width="5" stroke-dasharray="26 14"/>`;
+  if(o.center==="fi") center=`<path d="M96 0 V200" stroke="#F2C200" stroke-width="5"/><path d="M106 0 V200" stroke="#fff" stroke-width="4" stroke-dasharray="20 14"/>`;
+  return svg(`<rect width="200" height="200" fill="#6b8f4e"/><rect x="34" width="132" height="200" fill="#4a4f55"/>
+   <path d="M44 0 V200 M156 0 V200" stroke="#fff" stroke-width="4" ${side}/>${center}`);
+}
+function snowPole(bandY,bandH){
+  return svg(`<rect x="0" y="182" width="200" height="18" fill="#e8eef2"/><rect x="92" y="14" width="16" height="172" rx="3" fill="#F07F1A"/>
+   <rect x="92" y="${bandY}" width="16" height="${bandH}" fill="#fff"/><path d="M92 14 h16" stroke="#c45f0a" stroke-width="2"/>`);
+}
+function seChevron(){
+  return svg(`<rect x="20" y="50" width="160" height="100" rx="6" fill="#1D4F9C" stroke="#fff" stroke-width="4"/>
+   ${[46,86,126].map(x=>`<path d="M${x} 72 L${x+26} 100 L${x} 128" stroke="#F7C600" stroke-width="12" fill="none" stroke-linejoin="miter"/>`).join("")}`);
+}
+function fiWarn(){ // Finnish triangles: thin yellow outer edge
+  const p="100,20 186,168 14,168";
+  return svg(`<polygon points="${p}" fill="${C.yellow}" stroke="${C.yellow}" stroke-width="26" stroke-linejoin="round"/><polygon points="${p}" fill="${C.yellow}" stroke="${C.red}" stroke-width="18" stroke-linejoin="round"/>${EXCL}`);
+}
+function seBollard(){
+  return bollard({shape:"flat",w:34,body:"#1b1b1b",bands:[{y0:34,y1:96,c:"#fff"}],refl:[{w:12,h:26,y:52,c:"#9aa0a6"}]});
+}
+const NORDIC=[
+ {k:"中央線",n:{v:()=>nRoad({center:"yellow",side:"dash"}),t:"黄色（オレンジがかった黄色）"},s:{v:()=>nRoad({center:"white",side:"dash"}),t:"白。スウェーデンに黄色の中央線は無い"},f:{v:()=>nRoad({center:"fi",side:"solid"}),t:"黄色の実線＋白い破線、または白の破線。黄色は新しい画像では減っている"}},
+ {k:"路肩の線",n:{t:"白。破線のことが多い"},s:{t:"白の破線。線より隙間のほうが長い"},f:{t:"白の実線のみ（破線は使わない）。※オーランド諸島は例外で破線"}},
+ {k:"警戒標識",n:{v:()=>triangle(C.white,18,EXCL),t:"白地"},s:{v:()=>triangle(C.yellow,18,BAR),t:"黄色地。「その他の危険」は縦線"},f:{v:()=>fiWarn(),t:"黄色地。赤縁の外側に細い黄色の縁取り"}},
+ {k:"最高速度",n:{v:()=>speed(C.white,false),t:"白地"},s:{v:()=>speed(C.yellow,false),t:"黄色地"},f:{v:()=>speed(C.yellow,false),t:"黄色地"}},
+ {k:"ボラード",n:{v:TYPES_REF("bollard","no"),t:"細い板状。黒い平行四辺形の中に反射板"},s:{v:()=>seBollard(),t:"白黒で、灰色の反射板が多い（簡略図）"},f:{v:TYPES_REF("bollard","fi"),t:"長い白黒。正面に白い長方形の反射板、裏に点2つ。正面から見て円柱形"}},
+ {k:"カーブの矢羽根（シェブロン）",n:{t:"特徴なし"},s:{v:()=>seChevron(),t:"青と黄色の矢羽根はスウェーデン独特"},f:{t:"特徴なし"}},
+ {k:"雪ポール",n:{v:()=>snowPole(120,40),t:"オレンジで、低い位置に太い白帯"},s:{v:()=>snowPole(120,40),t:"オレンジで、低い位置に太い白帯"},f:{v:()=>snowPole(26,8),t:"オレンジで、上端近くに細い白帯"}},
+ {k:"一般道の案内標識",n:{v:()=>panel(C.swyel,C.black,{edge:C.black,route:{bg:C.swyel,fg:C.black,stroke:C.black}}),t:"黄色地に黒文字"},s:{v:()=>panel(C.blue,"#fff",{route:{bg:"#fff",fg:C.blue}}),t:"青地に白文字"},f:{v:()=>panel(C.blue,"#fff",{route:{bg:"#fff",fg:C.blue}}),t:"青地に白文字"}},
+ {k:"バス停",n:{v:busNordic,t:"横長の青い板に白いバス"},s:{v:busNordic,t:"横長の青い板に白いバス"},f:{v:busFinland,t:"黄色い板に黄色いバス"}},
+ {k:"横断歩道の標識",n:{v:()=>crossing({mode:"bars",n:4}),t:"縞4本が多い"},s:{v:()=>crossing({mode:"bars",n:4}),t:"縞4本が多い"},f:{v:()=>crossing({mode:"bars",n:5}),t:"縞5本"}},
+ {k:"ナンバープレート",n:{v:()=>plateSvg({strip:"no"}),t:"左の青帯にEUの星がなく国旗"},s:{v:()=>plateSvg({strip:"eu"}),t:"EUの青帯付きの白"},f:{v:()=>plateSvg({strip:"eu",w:150}),t:"EUの青帯付きの白で、長さがやや短い"}},
+ {k:"文字・言語",n:{v:()=>langCard("æ ø å","vei / gate"),t:"æ ø がある。通り＝vei、gate"},s:{v:()=>langCard("å ä ö","väg / gatan"),t:"ä ö と å。通り＝väg、gatan"},f:{v:()=>langCard("ää yy","tie / katu"),t:"ä y と二重母音・二重子音。通り＝tie、katu（西部・南部はスウェーデン語併記あり）"}},
+ {k:"地形",n:{t:"山・フィヨルドが多く起伏が大きい"},s:{t:"比較的なだらかな森と農地"},f:{t:"平坦な森と湖が延々と続く"}}
+];
+function TYPES_REF(tid,gid){return ()=>{const t=TYPES.find(x=>x.id===tid);const g=t&&t.groups.find(x=>x.id===gid);return g?g.draw():""}}
+function renderNordic(){
+  const flow=[["中央線が黄色","ノルウェーかフィンランド（スウェーデンは黄色の中央線なし）"],["中央線が白で、路肩が長い隙間の破線","スウェーデン"],
+   ["路肩の線が実線","フィンランド（破線ならノルウェーかスウェーデン）"],["警戒・速度標識が白地","ノルウェー（黄色地ならスウェーデンかフィンランド）"],
+   ["青と黄色の矢羽根","スウェーデン"],["バス停が黄色","フィンランド"],["ナンバーの青帯に星がない","ノルウェー"],
+   ["文字に ø æ","ノルウェー"],["ää・yy のような二重の母音","フィンランド"]];
+  $("#bZone").innerHTML=`<h2 style="margin-top:4px">すぐ使える決め手（上から順に確認）</h2>
+   <div class="nflow">${flow.map(([a,b])=>`<div><span>${esc(a)}</span><b>→ ${esc(b)}</b></div>`).join("")}</div>
+   <h2>項目別の比較</h2>
+   <div class="ntab-wrap"><table class="ntab"><thead><tr><th></th><th><span class="nf">${flagSvg("Norway")}</span>ノルウェー</th><th><span class="nf">${flagSvg("Sweden")}</span>スウェーデン</th><th><span class="nf">${flagSvg("Finland")}</span>フィンランド</th></tr></thead>
+   <tbody>${NORDIC.map(r=>`<tr><th>${esc(r.k)}</th>${["n","s","f"].map(c=>`<td>${r[c].v?`<div class="nv">${r[c].v()}</div>`:""}<div>${esc(r[c].t)}</div></td>`).join("")}</tr>`).join("")}</tbody></table></div>
+   <p class="note">出典：GeoGuessr攻略サイト（geometas、Plonk It ほか）の記述をもとに作成。図は特徴を強調した簡略図です。道路や画像の年代によって例外があります。</p>`;
+  $("#bGrid").innerHTML="";
+}
+
 let REFMODE="both";
 function drawRefMap(cfg){
   const M=cfg.M;let paths="",labs="";
@@ -1179,7 +1245,7 @@ const TYPES=[
   groups:[
    {id:"b5",draw:()=>crossing({mode:"bars",n:5}),
     countries:["Germany","Netherlands","Finland","Latvia","Croatia","Slovakia","Romania","Luxembourg","Turkey","Albania",
-      "Czechia","Denmark","Hungary","Norway","Italy","France","Portugal","Serbia","Slovenia","Montenegro","North Macedonia"],
+      "Czechia","Denmark","Hungary","Italy","France","Portugal","Serbia","Slovenia","Montenegro","North Macedonia"],
     tip:"足元の縞が5本。ヨーロッパで最も多い形で、半数以上の国が使っています。これだけでは国を絞りにくく、5本以外なら一気に絞れる、という使い方をします。"},
    {id:"l2",draw:()=>crossing({mode:"lines"}),countries:["Austria","Belgium","Greece"],
     tip:"縞がなく、横断歩道の上下の縁が細かい破線で描かれています。オーストリア、ベルギー、ギリシャです（イタリアやフランスなどにも一部あります）。遠目では実線に見えることもあるので、縞の有無で判断します。"},
@@ -1187,8 +1253,8 @@ const TYPES=[
     tip:"人物の後ろに実線の横線が1本だけ。これはヨーロッパでポーランドだけです（破線2本のオーストリア、ベルギー、ギリシャと区別）。"},
    {id:"b3",draw:()=>crossing({mode:"bars",n:3}),countries:["Estonia","Lithuania","Russia","Ukraine","Belarus"],
     tip:"縞が3本。エストニア、リトアニア、ロシア、ウクライナ、ベラルーシです（ラトビアは5本なのでバルト三国の判別に使えます）。"},
-   {id:"b4",draw:()=>crossing({mode:"bars",n:4}),countries:["Bulgaria","Sweden"],
-    tip:"縞が4本。ブルガリアとスウェーデンです（ハンガリーとノルウェーにも一部あります）。"},
+   {id:"b4",draw:()=>crossing({mode:"bars",n:4}),countries:["Bulgaria","Sweden","Norway"],
+    tip:"縞が4本。ブルガリア、スウェーデン、ノルウェーです（ハンガリーにも一部あります）。北欧ではフィンランドだけが5本。"},
    {id:"is",draw:()=>crossing({mode:"bars",n:4,tri:C.yellow}),countries:["Iceland"],
     tip:"三角形が黄色なのはアイスランドだけです。"},
    {id:"b7",draw:()=>crossing({mode:"bars",n:7}),countries:["Switzerland","Liechtenstein"],
@@ -1393,6 +1459,7 @@ const TYPES=[
    groups:[
    {id:"L",draw:()=>driveRoad(true),countries:DRIVE_L,tip:"左側通行。東南アジアではタイ、マレーシア、シンガポール、インドネシア、ブルネイ、東ティモール。南アジア（インド、スリランカなど）と日本・香港・マカオも左。"},
    {id:"R",draw:()=>driveRoad(false),countries:DRIVE_R,tip:"右側通行。東南アジアではフィリピン、ベトナム、ラオス、カンボジア、ミャンマー。ミャンマーは右側通行なのに右ハンドル車（日本の中古車）が多いので注意。"}]},
+ {id:"eu_nordic",area:"eu",ref:1,refRender:"nordic",cat:"資料",ja:"【資料】ノルウェー・スウェーデン・フィンランドの見分け方",en:"Telling the Nordics apart",groups:[]},
  {id:"eu_ref",area:"eu",ref:1,cat:"資料",ja:"【資料】ドメインと国旗（地図）",en:"ccTLDs & flags",groups:[]},
  {id:"af_drive",area:"af",cat:"アフリカ・道路",ja:"通行方向（左側／右側）",en:"Driving side",
    rule:"規則：東部・南部アフリカ（旧イギリス領が多い）は左側通行、西部・北部は右側通行。例外はルワンダとブルンジ（左側通行のウガンダ・タンザニアに接するが右側通行）。",
@@ -1715,7 +1782,7 @@ function openBrowse(){
 }
 function renderBrowse(){
   const t=typeById[$("#bSel").value];
-  if(t.ref){renderRef(REFCFG[t.area||"eu"]());return}
+  if(t.ref){if(t.refRender==="nordic"){renderNordic();return}renderRef(REFCFG[t.area||"eu"]());return}
   if(t.zone){const z=t.zone();const legend=z.legend2?`<div class="legend">${z.legend2.map(([c,l])=>`<span><i style="background:${c}"></i>${esc(l)}</span>`).join("")}</div>`:z.legend?`<div class="legend">${z.legend.map((l,i)=>`<span><i style="background:${ZCOL[i]}"></i>${esc(l)}</span>`).join("")}</div>`:z.items.length<=10?`<div class="legend">${z.items.map((it,i)=>`<span><i style="background:${it.color||ZCOL[i%ZCOL.length]}"></i>${esc(dispName(it.key))}（${esc(dispSub(it.key))}）</span>`).join("")}</div>`:"";
     const box=z.M===JMAP?`<rect x="${JMAP.box[0][0]}" y="${JMAP.box[0][1]}" width="${JMAP.box[1][0]-JMAP.box[0][0]}" height="${JMAP.box[1][1]-JMAP.box[0][1]}" fill="none" stroke="#6b7178" stroke-dasharray="4 3"/>`:"";
     $("#bZone").innerHTML=`<div class="map zonemap">${drawZoneMap(z.M,z.REF,z.items,box)}</div>${legend}`;}
