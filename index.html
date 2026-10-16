@@ -191,7 +191,7 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 <script>
 "use strict";
 /* ================= countries ================= */
-const JA={Albania:"アルバニア",Brunei:"ブルネイ","Timor-Leste":"東ティモール",Myanmar:"ミャンマー",Pakistan:"パキスタン","United States":"アメリカ合衆国",Canada:"カナダ",Mexico:"メキシコ",Guatemala:"グアテマラ",Honduras:"ホンジュラス","El Salvador":"エルサルバドル",
+const JA={Albania:"アルバニア",Kosovo:"コソボ",Cyprus:"キプロス",Brunei:"ブルネイ","Timor-Leste":"東ティモール",Myanmar:"ミャンマー",Pakistan:"パキスタン","United States":"アメリカ合衆国",Canada:"カナダ",Mexico:"メキシコ",Guatemala:"グアテマラ",Honduras:"ホンジュラス","El Salvador":"エルサルバドル",
  Nicaragua:"ニカラグア","Costa Rica":"コスタリカ",Panama:"パナマ","Dominican Republic":"ドミニカ共和国","Puerto Rico":"プエルトリコ",Colombia:"コロンビア",Venezuela:"ベネズエラ",
  Ecuador:"エクアドル",Peru:"ペルー",Bolivia:"ボリビア",Chile:"チリ",Argentina:"アルゼンチン",Uruguay:"ウルグアイ",Paraguay:"パラグアイ",Brazil:"ブラジル",
  California:"カリフォルニア州",Pennsylvania:"ペンシルベニア州",Utah:"ユタ州",Kansas:"カンザス州",Michigan:"ミシガン州","North Carolina":"ノースカロライナ州","New Mexico":"ニューメキシコ州",
@@ -1008,6 +1008,84 @@ function driveRoad(left){
 }
 const asZM=()=>({W:ASMAP.W,H:ASMAP.H,P:ASMAP.c,C:Object.fromEntries(Object.entries(ASMAP.p).map(([k,v])=>[k,[v[0],v[1]]])),A:Object.fromEntries(Object.entries(ASMAP.p).map(([k,v])=>[k,v[2]]))});
 
+
+/* ---------- Europe reference: ccTLDs & flags ---------- */
+const EU_TLD={Albania:[".al","アルバニア語 Shqipëri"],Andorra:[".ad",""],Austria:[".at","オーストラリアは .au なので注意"],Belarus:[".by",""],Belgium:[".be",""],
+ "Bosnia and Herzegovina":[".ba",""],Bulgaria:[".bg",""],Croatia:[".hr","Hrvatska（クロアチア語の国名）"],Cyprus:[".cy",""],Czechia:[".cz",""],Denmark:[".dk",""],
+ Estonia:[".ee","Eesti。スペインの .es と混同しやすい"],Finland:[".fi",""],France:[".fr",""],Germany:[".de","Deutschland"],Greece:[".gr",""],Hungary:[".hu",""],
+ Iceland:[".is",""],Ireland:[".ie",""],Italy:[".it",""],Kosovo:[".xk","正式な国別ドメインは未割り当て（.xk は暫定コード）"],Latvia:[".lv",""],Liechtenstein:[".li",""],
+ Lithuania:[".lt",""],Luxembourg:[".lu",""],Malta:[".mt",""],Moldova:[".md",""],Monaco:[".mc",""],Montenegro:[".me",""],Netherlands:[".nl",""],
+ "North Macedonia":[".mk",""],Norway:[".no",""],Poland:[".pl",""],Portugal:[".pt",""],Romania:[".ro",""],Russia:[".ru",""],"San Marino":[".sm",""],
+ Serbia:[".rs","Republika Srbija"],Slovakia:[".sk","スロベニアの .si と混同しやすい"],Slovenia:[".si","スロバキアの .sk と混同しやすい"],Spain:[".es","España。エストニアの .ee と混同しやすい"],
+ Sweden:[".se",""],Switzerland:[".ch","ラテン語の国名 Confoederatio Helvetica"],Turkey:[".tr",""],Ukraine:[".ua",""],"United Kingdom":[".uk",".gb ではない"],
+ Georgia:[".ge",""],Armenia:[".am",""],Azerbaijan:[".az",""]};
+const FLAG_NOTE={Romania:"モルドバ・アンドラとほぼ同じ配色（紋章の有無で区別）",Moldova:"ルーマニアと同配色＋中央に紋章",Andorra:"ルーマニアと同配色＋中央に紋章",
+ Slovenia:"スロバキア・ロシアと同じ白青赤（左上の紋章で区別）",Slovakia:"スロベニア・ロシアと同じ白青赤（左寄りの紋章で区別）",Russia:"紋章なしの白青赤",
+ Netherlands:"ルクセンブルクと似る（オランダは濃い青）",Luxembourg:"オランダと似る（ルクセンブルクは水色）",Ireland:"イタリアと似る（右がオレンジ）",Italy:"アイルランドと似る（右が赤）",
+ Monaco:"ポーランドの上下逆（赤が上）",Poland:"モナコの上下逆（白が上）",Belgium:"ドイツと同じ3色だが縦縞",Germany:"ベルギーと同じ3色だが横縞",
+ Austria:"赤白赤の横縞",Latvia:"えんじ色で中央の白が細い",Hungary:"イタリアと同じ3色だが横縞",Bulgaria:"白緑赤の横縞（ハンガリーと順番違い）",
+ Norway:"北欧十字。アイスランドと色が逆",Iceland:"北欧十字。ノルウェーと色が逆",Croatia:"中央に赤白の市松模様",Serbia:"赤青白（クロアチアと逆順）＋紋章"};
+function flagSvg(c){
+  const H=(cols,w)=>{const tot=(w||cols.map(()=>1)).reduce((a,b)=>a+b,0);let y=0;return cols.map((col,i)=>{const h=20*(w?w[i]:1)/tot;const r=`<rect y="${y.toFixed(2)}" width="30" height="${(h+.05).toFixed(2)}" fill="${col}"/>`;y+=h;return r}).join("")};
+  const V=(cols,w)=>{const tot=(w||cols.map(()=>1)).reduce((a,b)=>a+b,0);let x=0;return cols.map((col,i)=>{const ww=30*(w?w[i]:1)/tot;const r=`<rect x="${x.toFixed(2)}" width="${(ww+.05).toFixed(2)}" height="20" fill="${col}"/>`;x+=ww;return r}).join("")};
+  const N=(bg,cr,inner)=>`<rect width="30" height="20" fill="${bg}"/><rect x="8" width="${inner?5:4}" height="20" fill="${cr}"/><rect y="${inner?7.5:8}" width="30" height="${inner?5:4}" fill="${cr}"/>`+(inner?`<rect x="9.25" width="2.5" height="20" fill="${inner}"/><rect y="8.75" width="30" height="2.5" fill="${inner}"/>`:"");
+  const emb=(x,y,c1,c2)=>`<ellipse cx="${x}" cy="${y}" rx="2.4" ry="3" fill="${c1}" stroke="${c2||"#7a5a1a"}" stroke-width=".5"/>`;
+  const F={
+   Germany:H(["#000","#DD0000","#FFCE00"]),Austria:H(["#ED2939","#fff","#ED2939"]),Netherlands:H(["#AE1C28","#fff","#21468B"]),Luxembourg:H(["#ED2939","#fff","#00A1DE"]),
+   Hungary:H(["#CD2A3E","#fff","#436F4D"]),Bulgaria:H(["#fff","#00966E","#D62612"]),Russia:H(["#fff","#0039A6","#D52B1E"]),Estonia:H(["#0072CE","#000","#fff"]),
+   Lithuania:H(["#FDB913","#006A44","#C1272D"]),Latvia:H(["#9E3039","#fff","#9E3039"],[2,1,2]),Ukraine:H(["#0057B7","#FFD700"]),Poland:H(["#fff","#DC143C"]),Monaco:H(["#CE1126","#fff"]),
+   Belarus:H(["#C8313E","#4AA657"],[2,1])+`<rect width="3.2" height="20" fill="#fff"/>`+[2,6,10,14,18].map(y=>`<path d="M1.6 ${y-1.6} L3 ${y} L1.6 ${y+1.6} L.2 ${y} Z" fill="#C8313E"/>`).join(""),
+   Slovenia:H(["#fff","#005DA4","#ED1C24"])+`<path d="M5.5 3.5 H10.5 V8 Q8 10.5 5.5 8 Z" fill="#005DA4" stroke="#ED1C24" stroke-width=".5"/>`,
+   Slovakia:H(["#fff","#0B4EA2","#EE1C25"])+`<path d="M6 4.5 H13 V11 Q9.5 15 6 11 Z" fill="#EE1C25" stroke="#fff" stroke-width=".6"/><path d="M9.5 6 V12 M8 7.5 H11 M7.6 9.3 H11.4" stroke="#fff" stroke-width=".8"/>`,
+   Serbia:H(["#C6363C","#0C4076","#fff"])+`<path d="M6 4 H11 V10 Q8.5 13 6 10 Z" fill="#C6363C" stroke="#EDB92E" stroke-width=".5"/>`,
+   Croatia:H(["#FF0000","#fff","#171796"])+(()=>{let r="";for(let i=0;i<5;i++)for(let j=0;j<5;j++)r+=`<rect x="${12.5+i}" y="${6+j}" width="1" height="1" fill="${(i+j)%2?"#fff":"#FF0000"}"/>`;return `<rect x="12.3" y="5.8" width="5.4" height="5.4" fill="none" stroke="#171796" stroke-width=".3"/>`+r})(),
+   Armenia:H(["#D90012","#0033A0","#F2A800"]),Azerbaijan:H(["#00B5E2","#EF3340","#509E2F"])+`<circle cx="14" cy="10" r="2.4" fill="#fff"/><circle cx="14.7" cy="10" r="2" fill="#EF3340"/>`,
+   France:V(["#0055A4","#fff","#EF4135"]),Italy:V(["#009246","#fff","#CE2B37"]),Ireland:V(["#169B62","#fff","#FF883E"]),Belgium:V(["#000","#FAE042","#ED2939"]),
+   Romania:V(["#002B7F","#FCD116","#CE1126"]),Moldova:V(["#0046AE","#FFD200","#CC092F"])+emb(15,10,"#B07E3E"),Andorra:V(["#10069F","#FEDF00","#D0103A"])+emb(15,10,"#C7B37F","#B5121B"),
+   Malta:V(["#fff","#CF142B"])+`<path d="M3 2 H5 V3 H6 V5 H5 V6 H3 V5 H2 V3 H3 Z" fill="#cfcfcf" stroke="#CF142B" stroke-width=".3"/>`,
+   Liechtenstein:H(["#002B7F","#CE1126"])+`<path d="M5 6.5 L6 3.5 L7.5 5 L9 3.5 L10 6.5 Z" fill="#FFD83D"/>`,"San Marino":H(["#fff","#5EB6E4"])+emb(15,10,"#e9d27c"),
+   Portugal:V(["#046A38","#DA291C"],[2,3])+`<circle cx="12" cy="10" r="3.6" fill="#FFE900"/><path d="M10.6 8 H13.4 V11 Q12 12.6 10.6 11 Z" fill="#DA291C" stroke="#fff" stroke-width=".4"/>`,
+   Spain:H(["#AA151B","#F1BF00","#AA151B"],[1,2,1])+`<rect x="7.5" y="7.5" width="3" height="4" rx=".6" fill="#AA151B" stroke="#7a5a1a" stroke-width=".3"/>`,
+   Denmark:N("#C8102E","#fff"),Sweden:N("#006AA7","#FECC00"),Norway:N("#BA0C2F","#fff","#00205B"),Finland:N("#fff","#002F6C"),Iceland:N("#02529C","#fff","#DC1E35"),
+   Switzerland:`<rect width="30" height="20" fill="#DA291C"/><rect x="13.3" y="4" width="3.4" height="12" fill="#fff"/><rect x="9" y="8.3" width="12" height="3.4" fill="#fff"/>`,
+   "United Kingdom":`<rect width="30" height="20" fill="#012169"/><path d="M0 0 L30 20 M30 0 L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0 L30 20 M30 0 L0 20" stroke="#C8102E" stroke-width="1.4"/><path d="M15 0 V20 M0 10 H30" stroke="#fff" stroke-width="6"/><path d="M15 0 V20 M0 10 H30" stroke="#C8102E" stroke-width="3.4"/>`,
+   Greece:(()=>{let r="";for(let i=0;i<9;i++)r+=`<rect y="${(i*20/9).toFixed(2)}" width="30" height="${(20/9+.05).toFixed(2)}" fill="${i%2?"#fff":"#0D5EAF"}"/>`;return r+`<rect width="11.1" height="11.1" fill="#0D5EAF"/><rect x="4.45" width="2.2" height="11.1" fill="#fff"/><rect y="4.45" width="11.1" height="2.2" fill="#fff"/>`})(),
+   Czechia:`<rect width="30" height="10" fill="#fff"/><rect y="10" width="30" height="10" fill="#D7141A"/><path d="M0 0 L15 10 L0 20 Z" fill="#11457E"/>`,
+   Turkey:`<rect width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.3" cy="10" r="4" fill="#E30A17"/><path d="M17.5 10 L19.6 9.3 L18.3 11.1 L18.3 8.9 L19.6 10.7 Z" fill="#fff"/>`,
+   Albania:`<rect width="30" height="20" fill="#E41E20"/><path d="M15 4 L13 6 L10 5 L11.5 8 L9 9 L12 10.5 L11 13 L14 12 L15 16 L16 12 L19 13 L18 10.5 L21 9 L18.5 8 L20 5 L17 6 Z" fill="#000"/>`,
+   Montenegro:`<rect width="30" height="20" fill="#C40308" stroke="#D3AE3B" stroke-width="1.6"/>`+emb(15,10,"#D3AE3B","#9a7a1a"),
+   "North Macedonia":`<rect width="30" height="20" fill="#D20000"/><path d="M15 10 L0 0 M15 10 L30 0 M15 10 L0 20 M15 10 L30 20 M15 10 L15 0 M15 10 L15 20 M15 10 L0 10 M15 10 L30 10" stroke="#FFE600" stroke-width="2"/><circle cx="15" cy="10" r="3" fill="#FFE600" stroke="#D20000" stroke-width=".6"/>`,
+   "Bosnia and Herzegovina":`<rect width="30" height="20" fill="#002395"/><path d="M8.5 0 H22 V20 Z" fill="#FECB00"/>`+[0,1,2,3,4,5,6].map(i=>`<circle cx="${6+i*2.2}" cy="${1.4+i*2.9}" r=".8" fill="#fff"/>`).join(""),
+   Cyprus:`<rect width="30" height="20" fill="#fff"/><path d="M9 8 Q15 5 21 7 L19 9 Q14 11 9 10 Z" fill="#D57800"/><path d="M11 13 Q15 15.5 19 13" stroke="#4E5B31" stroke-width="1" fill="none"/>`,
+   Georgia:`<rect width="30" height="20" fill="#fff"/><rect x="13" width="4" height="20" fill="#FF0000"/><rect y="8" width="30" height="4" fill="#FF0000"/>`+[[6.5,4],[23.5,4],[6.5,16],[23.5,16]].map(([x,y])=>`<path d="M${x} ${y-1.8} V${y+1.8} M${x-1.8} ${y} H${x+1.8}" stroke="#FF0000" stroke-width=".9"/>`).join(""),
+   Kosovo:`<rect width="30" height="20" fill="#244AA5"/><path d="M11 9 L14 7 L18 8 L19 11 L16 13 L12 12 Z" fill="#D0A650"/>`+[0,1,2,3,4,5].map(i=>`<circle cx="${9.5+i*2.2}" cy="${5.2-Math.sin((i+.5)/6*Math.PI)*1.6}" r=".7" fill="#fff"/>`).join("")
+  };
+  const b=F[c];if(!b) return "";
+  return `<svg viewBox="0 0 30 20" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(c)}の国旗"><rect width="30" height="20" fill="#fff"/>${b}<rect width="30" height="20" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".4"/></svg>`;
+}
+let REFMODE="both";
+function drawRefMap(){
+  let paths="",labs="";
+  for(const [n,d] of Object.entries(MAP.c)) paths+=`<path d="${d}" fill="${EU_TLD[n]?"#5b6168":"#454a50"}" stroke="#2b2f33" stroke-width=".6"/>`;
+  const order=Object.entries(MAP.p).filter(([n])=>EU_TLD[n]).sort((a,b)=>b[1][2]-a[1][2]);
+  for(const [n,[x,y,a]] of order){
+    const small=a<60, fw=small?14:20, fh=fw*2/3;
+    if(REFMODE!=="domain"){const inner=flagSvg(n).replace('<svg ',`<svg x="${(x-fw/2).toFixed(1)}" y="${(y-fh-(REFMODE==="both"?2:-fh/2)).toFixed(1)}" width="${fw}" height="${fh.toFixed(1)}" `);labs+=inner}
+    if(REFMODE!=="flag") labs+=`<text x="${x}" y="${REFMODE==="both"?y+7:y}" text-anchor="middle" dominant-baseline="middle" font-size="${small?8:10}" font-weight="700" fill="#fff" stroke="#1d2125" stroke-width="2.5" paint-order="stroke" style="font-family:var(--font)">${EU_TLD[n][0]}</text>`;
+  }
+  return `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ヨーロッパのドメインと国旗の地図"><path d="${MAP.bg}" fill="#3a3f45"/>${paths}${labs}</svg>`;
+}
+function renderRef(){
+  const btn=(m,l)=>`<button data-m="${m}" aria-pressed="${REFMODE===m}">${l}</button>`;
+  $("#bZone").innerHTML=`<div class="seg" id="refSeg" style="max-width:420px;margin-bottom:10px">${btn("both","ドメイン＋国旗")}${btn("domain","ドメインのみ")}${btn("flag","国旗のみ")}</div>
+    <div class="map zonemap">${drawRefMap()}</div><p class="note">地図が混み合う小国（モナコ、サンマリノ、リヒテンシュタインなど）は下の一覧で確認できます。国旗は見分けに必要な特徴を残した簡略図です（紋章などは簡略化）。</p>`;
+  document.querySelectorAll("#refSeg button").forEach(b=>b.onclick=()=>{REFMODE=b.dataset.m;renderRef()});
+  const list=Object.keys(EU_TLD).sort((a,b)=>EU_TLD[a][0].localeCompare(EU_TLD[b][0]));
+  $("#bGrid").innerHTML=list.map(n=>`<div class="cmp"><div class="img" style="aspect-ratio:3/2;padding:6px">${flagSvg(n)}</div>
+    <div class="nm">${EU_TLD[n][0]}　${esc(JA[n]||n)}<small>${esc(n)}</small></div>
+    ${EU_TLD[n][1]?`<div class="ct">ドメイン：${esc(EU_TLD[n][1])}</div>`:""}${FLAG_NOTE[n]?`<div class="ct">国旗：${esc(FLAG_NOTE[n])}</div>`:""}</div>`).join("");
+}
+
 /* ================= sign data ================= */
 // Countries using the most common (white, thick red border) design in each type
 const WHITE_COMMON=["Germany","France","Italy","Spain","Portugal","Netherlands","Belgium","Luxembourg","Austria","Switzerland",
@@ -1233,6 +1311,7 @@ const TYPES=[
    groups:[
    {id:"L",draw:()=>driveRoad(true),countries:DRIVE_L,tip:"左側通行。東南アジアではタイ、マレーシア、シンガポール、インドネシア、ブルネイ、東ティモール。南アジア（インド、スリランカなど）と日本・香港・マカオも左。"},
    {id:"R",draw:()=>driveRoad(false),countries:DRIVE_R,tip:"右側通行。東南アジアではフィリピン、ベトナム、ラオス、カンボジア、ミャンマー。ミャンマーは右側通行なのに右ハンドル車（日本の中古車）が多いので注意。"}]},
+ {id:"eu_ref",area:"eu",ref:1,cat:"資料",ja:"【資料】ドメインと国旗（地図）",en:"ccTLDs & flags",groups:[]},
  {id:"letters",cat:"言語・文字",ja:"特徴的な文字",en:"Distinctive letters",multi:["Belgium","Luxembourg","Switzerland","Spain","Belarus","Montenegro","Serbia"],groups:[
    {id:"hu",draw:()=>langCard("ő ű"),countries:["Hungary"],tip:"二重アキュート（ő ű）はハンガリー語だけ。"},
    {id:"pl",draw:()=>langCard("ł ż ę ą"),countries:["Poland"],tip:"ł（横棒付きのL）と ż ę ą はポーランド語。ł が決め手。"},
@@ -1431,7 +1510,7 @@ S.area=S.area||"eu"; S.known=S.known||S.types.slice();
 TYPES.forEach(t=>{if(!S.known.includes(t.id)){S.known.push(t.id);if(!S.types.includes(t.id))S.types.push(t.id)}});
 const saveS=()=>store("rsq2_settings",S);
 function renderSetup(){
-  $("#typeList").innerHTML=TYPES.filter(t=>(t.area||"eu")===S.area).map(t=>`<label><input type="checkbox" data-k="${t.id}" ${S.types.includes(t.id)?"checked":""}>
+  $("#typeList").innerHTML=TYPES.filter(t=>(t.area||"eu")===S.area&&!t.ref).map(t=>`<label><input type="checkbox" data-k="${t.id}" ${S.types.includes(t.id)?"checked":""}>
     <span><span class="cat">${esc(t.cat)}</span>${esc(t.ja)}${lvBadge(t)} <span class="hint">${esc(t.en)}</span></span>
     <span class="thumbs">${t.groups.slice(0,6).map(g=>g.draw()).join("")}</span></label>`).join("");
   document.querySelectorAll(".seg").forEach(seg=>seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S[seg.dataset.opt]))));
@@ -1443,7 +1522,7 @@ function renderSetup(){
 let Q=null, Q_ALL=false;
 const AREA_LABEL={eu:"ヨーロッパ",jp:"日本",as:"アジア",am:"南北アメリカ",us:"アメリカ州当て",oc:"オセアニア"};
 // Each design group is drawn equally often, so rare designs show up as much as the common one
-function activeTypes(){return TYPES.filter(t=>S.types.includes(t.id)&&(t.area||"eu")===S.area)}
+function activeTypes(){return TYPES.filter(t=>S.types.includes(t.id)&&(t.area||"eu")===S.area&&!t.ref)}
 function makeDeck(list){
   const n=+S.count, ts=list||activeTypes(), deck=[];
   if(list){ // all-areas mode: each region equally likely, then an item, then a pattern
@@ -1533,11 +1612,12 @@ function results(){
 
 /* ================= browse ================= */
 function openBrowse(){
-  $("#bSel").innerHTML=TYPES.filter(t=>(t.area||"eu")===S.area).map(t=>`<option value="${t.id}">${esc(t.cat)}：${esc(t.ja)}${t.level?"［"+LV[t.level][0]+"］":""}（${esc(t.en)}）</option>`).join("");
+  $("#bSel").innerHTML=TYPES.filter(t=>(t.area||"eu")===S.area).sort((a,b)=>(b.ref?1:0)-(a.ref?1:0)).map(t=>`<option value="${t.id}">${esc(t.cat)}：${esc(t.ja)}${t.level?"［"+LV[t.level][0]+"］":""}（${esc(t.en)}）</option>`).join("");
   show("sBrowse");renderBrowse();
 }
 function renderBrowse(){
   const t=typeById[$("#bSel").value];
+  if(t.ref){renderRef();return}
   if(t.zone){const z=t.zone();const legend=z.legend2?`<div class="legend">${z.legend2.map(([c,l])=>`<span><i style="background:${c}"></i>${esc(l)}</span>`).join("")}</div>`:z.legend?`<div class="legend">${z.legend.map((l,i)=>`<span><i style="background:${ZCOL[i]}"></i>${esc(l)}</span>`).join("")}</div>`:z.items.length<=10?`<div class="legend">${z.items.map((it,i)=>`<span><i style="background:${it.color||ZCOL[i%ZCOL.length]}"></i>${esc(dispName(it.key))}（${esc(dispSub(it.key))}）</span>`).join("")}</div>`:"";
     const box=z.M===JMAP?`<rect x="${JMAP.box[0][0]}" y="${JMAP.box[0][1]}" width="${JMAP.box[1][0]-JMAP.box[0][0]}" height="${JMAP.box[1][1]-JMAP.box[0][1]}" fill="none" stroke="#6b7178" stroke-dasharray="4 3"/>`:"";
     $("#bZone").innerHTML=`<div class="map zonemap">${drawZoneMap(z.M,z.REF,z.items,box)}</div>${legend}`;}
@@ -1553,13 +1633,13 @@ $("#homeBtn").onclick=()=>{show("sSetup");renderSetup()};
 $("#typeList").onchange=e=>{const k=e.target.dataset.k;if(!k)return;S.types=e.target.checked?[...S.types,k]:S.types.filter(x=>x!==k);saveS();renderSetup()};
 document.querySelectorAll(".seg").forEach(seg=>seg.onclick=e=>{const b=e.target.closest("button");if(!b)return;S[seg.dataset.opt]=b.dataset.v;saveS();renderSetup()});
 $("#startBtn").onclick=()=>{Q_ALL=false;startQuiz(makeDeck())};
-$("#allBtn").onclick=()=>{Q_ALL=true;startQuiz(makeDeck(TYPES.slice()))};
+$("#allBtn").onclick=()=>{Q_ALL=true;startQuiz(makeDeck(TYPES.filter(t=>!t.ref)))};
 $("#browseBtn").onclick=openBrowse;
 $("#bSel").onchange=renderBrowse;
 $("#blades").onclick=e=>{const b=e.target.closest(".blade");if(b)answer(b.dataset.c)};
 $("#nextBtn").onclick=next;
 $("#retryMiss").onclick=()=>startQuiz(shuffle(Q.miss.map(({picked,...m})=>m)));
-$("#again").onclick=()=>startQuiz(Q_ALL?makeDeck(TYPES.slice()):makeDeck());
+$("#again").onclick=()=>startQuiz(Q_ALL?makeDeck(TYPES.filter(t=>!t.ref)):makeDeck());
 document.addEventListener("keydown",e=>{
   if(!$("#sQuiz").classList.contains("on"))return;
   if(/^[1-4]$/.test(e.key)&&!Q.answered&&!typeById[Q.deck[Q.i].tid].mapPick){const b=document.querySelectorAll(".blade")[+e.key-1];if(b)answer(b.dataset.c)}
