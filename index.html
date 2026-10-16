@@ -191,7 +191,7 @@ h2{font-size:15px;font-weight:600;color:var(--muted);margin:26px 0 10px}
 <script>
 "use strict";
 /* ================= countries ================= */
-const JA={Albania:"アルバニア","United States":"アメリカ合衆国",Canada:"カナダ",Mexico:"メキシコ",Guatemala:"グアテマラ",Honduras:"ホンジュラス","El Salvador":"エルサルバドル",
+const JA={Albania:"アルバニア",Brunei:"ブルネイ","Timor-Leste":"東ティモール",Myanmar:"ミャンマー",Pakistan:"パキスタン","United States":"アメリカ合衆国",Canada:"カナダ",Mexico:"メキシコ",Guatemala:"グアテマラ",Honduras:"ホンジュラス","El Salvador":"エルサルバドル",
  Nicaragua:"ニカラグア","Costa Rica":"コスタリカ",Panama:"パナマ","Dominican Republic":"ドミニカ共和国","Puerto Rico":"プエルトリコ",Colombia:"コロンビア",Venezuela:"ベネズエラ",
  Ecuador:"エクアドル",Peru:"ペルー",Bolivia:"ボリビア",Chile:"チリ",Argentina:"アルゼンチン",Uruguay:"ウルグアイ",Paraguay:"パラグアイ",Brazil:"ブラジル",
  California:"カリフォルニア州",Pennsylvania:"ペンシルベニア州",Utah:"ユタ州",Kansas:"カンザス州",Michigan:"ミシガン州","North Carolina":"ノースカロライナ州","New Mexico":"ニューメキシコ州",
@@ -222,7 +222,7 @@ const JP={hokkaido:["北海道電力","北海道"],tohoku:["東北電力","東�
  chugoku:["中国電力","中国地方"],shikoku:["四国電力","四国"],kyushu:["九州電力","九州"]};
 Object.entries(JP).forEach(([k,v])=>{JA[k]=v[0]});
 GROUPS.push(["hokkaido","tohoku"],["tohoku","tokyo","hokuriku"],["hokuriku","chubu","kansai"],["tokyo","chubu","tohoku"],["chubu","kansai","hokuriku"],["kansai","chugoku","shikoku"],["chugoku","shikoku","kyushu"],["kyushu","shikoku","chugoku"]);
-GROUPS.push(["Malaysia","Indonesia","Singapore","Thailand","Philippines"],["Thailand","Laos","Cambodia","Vietnam","Malaysia"],
+GROUPS.push(["Malaysia","Indonesia","Singapore","Thailand","Philippines","Brunei"],["Thailand","Myanmar","Laos","Cambodia","Malaysia"],["Indonesia","Timor-Leste","Philippines","Malaysia"],["India","Pakistan","Bangladesh","Nepal"],["Myanmar","Bangladesh","India","Thailand"],["Thailand","Laos","Cambodia","Vietnam","Malaysia"],
  ["India","Bangladesh","Sri Lanka","Bhutan","Nepal"],["Japan","South Korea","Taiwan","Hong Kong","Macau"],["Taiwan","Hong Kong","Macau","Philippines","Vietnam"],
  ["Israel","Palestine","Jordan","Lebanon"],["Jordan","United Arab Emirates","Qatar","Oman","Israel"],["Kazakhstan","Kyrgyzstan","Mongolia"]);
 GROUPS.push(["United States","Canada","Mexico"],["Mexico","Guatemala","Honduras","El Salvador"],["Guatemala","Honduras","El Salvador","Nicaragua","Costa Rica","Panama"],
@@ -947,10 +947,11 @@ function drawZoneMap(M,REF,items,box){
   let paths="",labels="";const used=new Set();
   items.forEach((it,i)=>{(REF[it.key]||[]).forEach(id=>{if(M.P[id]){paths+=`<path d="${M.P[id]}" fill="${it.color||ZCOL[i%ZCOL.length]}" stroke="#2b2f33" stroke-width=".6"/>`;used.add(id)}})});
   for(const [id,d] of Object.entries(M.P)) if(!used.has(id)) paths=`<path d="${d}" fill="#4b5056" stroke="#2b2f33" stroke-width=".5"/>`+paths;
+  if(M.A) items.forEach((it,i)=>{(REF[it.key]||[]).forEach(id=>{if(M.A[id]!=null&&M.A[id]<60&&M.C[id])paths+=`<circle cx="${M.C[id][0]}" cy="${M.C[id][1]}" r="5" fill="${it.color||ZCOL[i%ZCOL.length]}" stroke="#fff" stroke-width="1.5"/>`})});
   items.forEach(it=>{const ids=(REF[it.key]||[]).filter(id=>M.C[id]);if(!ids.length||!it.label)return;
     const x=ids.reduce((a,id)=>a+M.C[id][0],0)/ids.length,y=ids.reduce((a,id)=>a+M.C[id][1],0)/ids.length;
     labels+=`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle" dominant-baseline="middle" font-size="${it.size||15}" font-weight="700" fill="#fff" stroke="#1d2125" stroke-width="3" paint-order="stroke" style="font-family:var(--font)">${esc(it.label)}</text>`});
-  return `<svg viewBox="0 0 ${M.W} ${M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域の色分け地図">${box||""}${paths}${labels}</svg>`;
+  return `<svg viewBox="${M.view?M.view.join(" "):"0 0 "+M.W+" "+M.H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="地域の色分け地図">${box||""}${paths}${labels}</svg>`;
 }
 function drawPickMap(z){
   const used=new Set();let g="";
@@ -991,6 +992,21 @@ const IDZ=[["02","ジャワ島西部・中部","ジャカルタ、バンドン�
 const IDSHORT={"02":"02x ジャワ西","03":"03x ジャワ東・バリ","04":"04x スラウェシ","05":"05x カリマンタン","06":"06x スマトラ北","07":"07x スマトラ中南","09":"09x マルク・パプア"};
 IDZ.forEach(([z,n,sub,ids])=>{const k="id"+z;JP[k]=[`${z}x：${n}`,sub];JA[k]=IDSHORT[z];IDREF[k]=ids.split("|")});
 GROUPS.push(["id02","id03","id07"],["id06","id07","id05"],["id04","id05","id09","id03"]);
+
+
+/* ---------- driving side (Asia) ---------- */
+const DRIVE_L=["Japan","Hong Kong","Macau","Thailand","Malaysia","Singapore","Brunei","Indonesia","Timor-Leste","India","Pakistan","Bangladesh","Nepal","Bhutan","Sri Lanka"];
+const DRIVE_R=["South Korea","Taiwan","China","Mongolia","Philippines","Vietnam","Laos","Cambodia","Myanmar","Kazakhstan","Kyrgyzstan","Israel","Palestine","Jordan","Lebanon","United Arab Emirates","Qatar","Oman"];
+function driveRoad(left){
+  const car=(x,y,up,c)=>`<g transform="translate(${x} ${y}) rotate(${up?0:180})"><rect x="-15" y="-26" width="30" height="52" rx="8" fill="${c}"/><rect x="-11" y="-14" width="22" height="12" rx="3" fill="#cfe3f2"/><rect x="-11" y="10" width="22" height="9" rx="3" fill="#cfe3f2" opacity=".7"/></g>`;
+  const arrow=(x,up)=>`<path d="M${x} ${up?150:50} V${up?112:88} M${x-8} ${up?120:80} L${x} ${up?110:90} L${x+8} ${up?120:80}" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>`;
+  return svg(`<rect x="0" y="0" width="200" height="200" fill="#7d9a5b"/><rect x="40" y="0" width="120" height="200" fill="#4a4f55"/>
+   <path d="M100 0 V200" stroke="#fff" stroke-width="3" stroke-dasharray="14 12"/><path d="M46 0 V200 M154 0 V200" stroke="#fff" stroke-width="2"/>
+   ${left?car(70,62,true,"#2f7fd6")+car(130,140,false,"#d64545")+arrow(70,true)+arrow(130,false):car(130,62,true,"#2f7fd6")+car(70,140,false,"#d64545")+arrow(130,true)+arrow(70,false)}
+   <rect x="58" y="172" width="84" height="22" rx="4" fill="#141414" opacity=".75"/>
+   <text x="100" y="188" text-anchor="middle" font-family="'Hiragino Sans','Yu Gothic','Noto Sans CJK JP',sans-serif" font-weight="700" font-size="13" fill="#fff">${left?"左側通行":"右側通行"}</text>`);
+}
+const asZM=()=>({W:ASMAP.W,H:ASMAP.H,P:ASMAP.c,C:Object.fromEntries(Object.entries(ASMAP.p).map(([k,v])=>[k,[v[0],v[1]]])),A:Object.fromEntries(Object.entries(ASMAP.p).map(([k,v])=>[k,v[2]]))});
 
 /* ================= sign data ================= */
 // Countries using the most common (white, thick red border) design in each type
@@ -1208,6 +1224,15 @@ const TYPES=[
    zone:()=>({M:IDMAP,REF:IDREF,items:IDZ.map(z=>({key:"id"+z[0],label:z[0]+"x"}))}),
    groups:IDZ.flatMap(([z,n,sub,ids,codes])=>codes.split(" ").map(c=>({id:"idc"+c,draw:()=>phoneIntl(`(${c})`,c.length===3?" ****-****":" ******",pick(["Toko Makmur","Bengkel Jaya","Apotek Sehat","Warung Sari"]),"Telp."),countries:["id"+z],
      tip:`(${c}) は${n}（${sub}）。`})))},
+ {id:"as_drive",area:"as",cat:"アジア・道路",ja:"通行方向（左側／右側）",en:"Driving side",
+   rule:"東南アジアの分かれ目：タイ・マレーシア・シンガポール・インドネシア・ブルネイ・東ティモールは左側通行。フィリピン・ベトナム・ラオス・カンボジア・ミャンマーは右側通行。",
+   zone:()=>{const M=asZM();const se=["Myanmar","Thailand","Laos","Vietnam","Cambodia","Malaysia","Singapore","Indonesia","Philippines","Brunei","Timor-Leste"].map(c=>M.C[c]).filter(Boolean);
+     const x0=Math.min(...se.map(p=>p[0]))-70,x1=Math.max(...se.map(p=>p[0]))+80,y0=Math.min(...se.map(p=>p[1]))-70,y1=Math.max(...se.map(p=>p[1]))+50;M.view=[x0,y0,x1-x0,y1-y0].map(v=>Math.round(v));return {M,REF:Object.fromEntries([...DRIVE_L,...DRIVE_R].map(c=>[c,[c]])),markers:true,
+     items:[...DRIVE_L.map(c=>({key:c,color:"#e0904a",label:JA[c],size:8})),...DRIVE_R.map(c=>({key:c,color:"#4a78d6",label:JA[c],size:8}))],
+     legend2:[["#e0904a","左側通行（車は左を走る・右ハンドル）"],["#4a78d6","右側通行（車は右を走る・左ハンドル）"]]}},
+   groups:[
+   {id:"L",draw:()=>driveRoad(true),countries:DRIVE_L,tip:"左側通行。東南アジアではタイ、マレーシア、シンガポール、インドネシア、ブルネイ、東ティモール。南アジア（インド、スリランカなど）と日本・香港・マカオも左。"},
+   {id:"R",draw:()=>driveRoad(false),countries:DRIVE_R,tip:"右側通行。東南アジアではフィリピン、ベトナム、ラオス、カンボジア、ミャンマー。ミャンマーは右側通行なのに右ハンドル車（日本の中古車）が多いので注意。"}]},
  {id:"letters",cat:"言語・文字",ja:"特徴的な文字",en:"Distinctive letters",multi:["Belgium","Luxembourg","Switzerland","Spain","Belarus","Montenegro","Serbia"],groups:[
    {id:"hu",draw:()=>langCard("ő ű"),countries:["Hungary"],tip:"二重アキュート（ő ű）はハンガリー語だけ。"},
    {id:"pl",draw:()=>langCard("ł ż ę ą"),countries:["Poland"],tip:"ł（横棒付きのL）と ż ę ą はポーランド語。ł が決め手。"},
@@ -1513,7 +1538,7 @@ function openBrowse(){
 }
 function renderBrowse(){
   const t=typeById[$("#bSel").value];
-  if(t.zone){const z=t.zone();const legend=z.legend?`<div class="legend">${z.legend.map((l,i)=>`<span><i style="background:${ZCOL[i]}"></i>${esc(l)}</span>`).join("")}</div>`:z.items.length<=10?`<div class="legend">${z.items.map((it,i)=>`<span><i style="background:${it.color||ZCOL[i%ZCOL.length]}"></i>${esc(dispName(it.key))}（${esc(dispSub(it.key))}）</span>`).join("")}</div>`:"";
+  if(t.zone){const z=t.zone();const legend=z.legend2?`<div class="legend">${z.legend2.map(([c,l])=>`<span><i style="background:${c}"></i>${esc(l)}</span>`).join("")}</div>`:z.legend?`<div class="legend">${z.legend.map((l,i)=>`<span><i style="background:${ZCOL[i]}"></i>${esc(l)}</span>`).join("")}</div>`:z.items.length<=10?`<div class="legend">${z.items.map((it,i)=>`<span><i style="background:${it.color||ZCOL[i%ZCOL.length]}"></i>${esc(dispName(it.key))}（${esc(dispSub(it.key))}）</span>`).join("")}</div>`:"";
     const box=z.M===JMAP?`<rect x="${JMAP.box[0][0]}" y="${JMAP.box[0][1]}" width="${JMAP.box[1][0]-JMAP.box[0][0]}" height="${JMAP.box[1][1]-JMAP.box[0][1]}" fill="none" stroke="#6b7178" stroke-dasharray="4 3"/>`:"";
     $("#bZone").innerHTML=`<div class="map zonemap">${drawZoneMap(z.M,z.REF,z.items,box)}</div>${legend}`;}
   else $("#bZone").innerHTML="";
